@@ -1,0 +1,131 @@
+<html>
+<pre>
+Control PROJECTS                                          -*- text -*-
+================
+
+grep FIXME and/or TODO for more information
+
+
+----------------
+Missing Features:
+----------------
+
+  * time delays                                     (challenging)
+
+  * arrays of LTI models                            (tedious)
+      e.g.  sys(:,:,1) = ss (-2, 3, 4, 5)
+      needs conversion of all  sys.(fieldname)
+      to cells, except for  sys.lti
+      requires a lot of cellfun statements!
+
+  * time/input/output/state units                   (easy)
+      (for LTI models, no effect on system behavior)
+
+  * zpk models                                      (routine)
+      (not a wrapper for tf models)
+      needs attention for conversions
+
+-------
+General:
+-------
+
+  * Improve @lti/subsasgn.m
+
+  * Improve @lti/parallel.m by implementing "complicated" case
+    sys = parallel (sys1, sys2, in1, in2, out1, out2)
+
+  * n-th order approximation of time delay  exp (tau*s)
+    sys = pade (tau, n)
+
+  * Add delays  exp (-T*s)  indelay, outdelay, stdelay, ...
+    -- Support time and frequency responses.
+    -- Support interconnections.
+
+  * Implement zpk models and @zpset similar to @tfpoly.
+
+  * SLICOT non-linear system identification.
+    idnlmodel class and simulation of Wiener models with SLICOT.
+
+  * Implement various system identification routines:
+    -- armax
+    -- bj      (Box-Jenkins)
+    -- oe      (Output Error)
+    -- rarx    (Recursive ARX)
+    -- rarmax  (Recursive ARMAX)
+    Support MIMO and multi-experiment datasets if possible.
+
+  * Descriptor support for pole placement command "place".
+  
+  * Implement mu-Synthesis command "dksyn" using  muHopt.f.
+
+  * Implement balreal.  Based on SLICOT AB09HY?
+
+  * Fix PDF manual.
+    -- Use TEX for formulas (iftex)
+
+  * "horzcat" and "vertcat" are trivial operations for TF, FRD and ZPK models.
+    Therefore model-specific commands (@tf/horzcat, @tf/vertcat, @frd/...)
+    which override the generic commands (@lti/horzcat, @lti/vertcat) could
+    make practical sense.  Done for TF models.
+
+  * Implement "times" (.*) operator for FRD models.  Done for TF models.
+
+  * Support more than two arguments in __sys_group__.
+
+  * Display individual warnings/errors for iwarn/info in oct-files.
+  
+  * Airtight argument checking for oct-files.  Currently there are no checks
+    because LTI methods are "nice" to the oct-files.  But oct-files are by no
+    means private and privateness is no protection because one could easily
+    create an @lti folder in an user directory and fool octave.  This can
+    become a problem if - for example - someone sets up a public web interface
+    where people can try out octave through their web browsers.
+
+  * Use "axis tight" and multiplot for margin.m.
+
+-----------------------
+Frequency Response Data:
+-----------------------
+
+  * Tolerances for intersection of frequency vectors in @frd/__sys_group__.m
+
+------------------
+State-Space Models:
+------------------
+
+  * Balancing: TB01TD ?
+
+  * Support descriptor models for bilin and prewarp methods in c2d and d2c
+    if beta*E - A or alpha*E + A are singular.
+
+------------------------
+Transfer Function Models:
+------------------------
+
+  * Find a transfer function to state-space conversion routine which
+    supports individual denominators for each input-output channel
+    (@tf/__sys2ss__.m).  Support for non-proper descriptor state-space
+    systems would be nice, but otherwise Andras' trick that is already
+    used for the current solution is not bad either.
+
+------
+Always:
+------
+
+  * Squash bugs.
+
+  * Write/improve documentation.  If you implement a feature without documentation,
+    nobody besides you will ever use it!  Don't waste your time :-)
+ 
+  * Add description of each input and output argument to texinfo strings of
+    functions on the INDEX list.
+
+  * Add tests.
+
+  * Test the control package on different platforms.
+
+  * Compare results to those from other free and non-free implementations of an
+    Octave-like language.
+
+</pre>
+</html>
