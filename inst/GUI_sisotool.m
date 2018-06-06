@@ -3,22 +3,19 @@
 ## Useful since Octave 4.0
 
 close all
-##clear h
 clear all
 
 global h1 h2
 
 % Initial Plant (Only for test)
 s = tf('s');
-h1.G = 50*(s+3) / (s^ 3-s^ 2+11*s-51);
-h1.H = 1;
-h1.K = 1;
+h1.G = 50*(s+3) / (s^ 3-s^ 2+11*s-51);  # Example
+h1.H = 1;   # Sensor
+h1.C = 1;  # Compensator
 h1.znew = [];
 h1.pnew = [];
 
 graphics_toolkit qt
-
-##pkg load control
 
 figure('Name','sisotool- Control System Designer v0 - 2','NumberTitle','off');
 
@@ -37,107 +34,101 @@ set(fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
 position = get (fig1, "position");
 set (fig1, "position", position + [-100 -100 +290 +60]) 
-        
-
 
 function update_plot (obj1, obj2, init = false, G)
-
-  global h1 h2
-  ## gcbo holds the handle of the control
-  replot = false;
-  recalc = false;
-    
-  diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
-  set(0, 'currentfigure', 1);  %# for figures
-  switch (diag)
-    case {[ 1 0 0]}
-      h2.axrl    = subplot(2,2,[1 2 3 4]); % Root Locus 
-    case {[ 0 1 0]}
-      h2.axbm = subplot(2,2,[1 2]); % Bode Margin Axes
-      h2.axbp  = subplot(2,2,[3 4]); % Bode Phase Axes
-    case {[ 0 0 1]}
-      h2.axny   = subplot(2,2,[1 2 3 4]); % Root Locus 
-    
-    case {[ 0 1 1]}
-      h2.axny  = subplot(2,2,[1 3]); % Nyquist Axes
-      h2.axbm = subplot(2,2,2); % Bode Margin Axes
-      h2.axbp  = subplot(2,2,4); % Bode Phase Axes
-    case {[ 1 0 1]}
-      h2.axrl    = subplot(2,1,1); % Root Locus Axes
-      h2.axny  = subplot(2,1,2); % Nyquist Axes
-    case {[ 1 1 0]}
-      h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
-      h2.axbm = subplot(2,2,2); % Bode Margin Axes
-      h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+    global h1 h2
+    ## gcbo holds the handle of the control
       
-    case {[ 1 1 1]}
-      h2.axrl    = subplot(2,2,1); % Root Locus Axes
-      h2.axny  = subplot(2,2,3); % Nyquist Axes
-      h2.axbm = subplot(2,2,2); % Bode Margin Axes
-      h2.axbp  = subplot(2,2,4); % Bode Phase Axes
-  endswitch
-    
-  if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
-    if (isaxes(h2.axrl) == 1)
-      axes(h2.axrl);
-      rlocus(h1.G);
-      e = eig(h1.G);
-      ec = eig(h1.K*h1.G/(h1.H+h1.K*h1.G));
-      eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-      hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-      hold off;
-    endif
-    if (isaxes(h2.axny) == 1)
-      axes(h2.axny);
-      nyquist(h1.G);
-    endif
-    if (isaxes(h2.axbm) == 1)
-      axes(h2.axbm);
-      bode (h1.G, 'sisotool'); 
-    endif
-  endif
+    diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
+    set(0, 'currentfigure', 1);  %# for figures
+    switch (diag)
+      case {[ 1 0 0]}
+        h2.axrl    = subplot(2,2,[1 2 3 4]); % Root Locus 
+      case {[ 0 1 0]}
+        h2.axbm = subplot(2,2,[1 2]); % Bode Margin Axes
+        h2.axbp  = subplot(2,2,[3 4]); % Bode Phase Axes
+      case {[ 0 0 1]}
+        h2.axny   = subplot(2,2,[1 2 3 4]); % Root Locus 
       
-  switch (gcbo)
-    case {h1.enter_plant}
-      s = tf('s');
-      v = get (gcbo, "string")
-      
-      try
-        h1.G = eval(v);
-        h1.znew = [];
-        h1.pnew = [];
+      case {[ 0 1 1]}
+        h2.axny  = subplot(2,2,[1 3]); % Nyquist Axes
+        h2.axbm = subplot(2,2,2); % Bode Margin Axes
+        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+      case {[ 1 0 1]}
+        h2.axrl    = subplot(2,1,1); % Root Locus Axes
+        h2.axny  = subplot(2,1,2); % Nyquist Axes
+      case {[ 1 1 0]}
+        h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
+        h2.axbm = subplot(2,2,2); % Bode Margin Axes
+        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
         
-        set(h1.lbl_plant, 'String', 'Transfer function : ... valid ! ...');
+      case {[ 1 1 1]}
+        h2.axrl    = subplot(2,2,1); % Root Locus Axes
+        h2.axny  = subplot(2,2,3); % Nyquist Axes
+        h2.axbm = subplot(2,2,2); % Bode Margin Axes
+        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+    endswitch
+      
+    if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
+      if (isaxes(h2.axrl) == 1)
+        axes(h2.axrl);
+        rlocus(h1.G);
+        e = eig(h1.G);
+        ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
+        eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
+        hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
+        hold off;
+      endif
+      if (isaxes(h2.axny) == 1)
+        axes(h2.axny);
+        nyquist(h1.G);
+      endif
+      if (isaxes(h2.axbm) == 1)
+        axes(h2.axbm);
+        bode (h1.G, 'sisotool'); 
+      endif
+    endif
         
-        if (isaxes(h2.axrl) == 1)
-          axes(h2.axrl);
-          rlocus(h1.G);
-          e = eig(h1.G);
-          ec = eig(h1.K*h1.G/(1+h1.K*h1.G));
-          eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-          hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6); 
-          hold off;
+    switch (gcbo)
+      case {h1.enter_plant}
+        s = tf('s');
+        v = get (gcbo, "string")
+        
+        try
+          h1.G = eval(v);
+          h1.znew = [];
+          h1.pnew = [];
           
-        endif
-        if (isaxes(h2.axny) == 1)
-          axes(h2.axny);
-          nyquist(h1.G);
-        endif
-        if (isaxes(h2.axbm) == 1)
-          axes(h2.axbm);
-          bode (h1.G, 'sisotool'); 
-        endif
-        axes(h1.ax1);
-        step(h1.G); 
-      catch
-        set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
-      end_try_catch
+          set(h1.lbl_plant, 'String', 'Transfer function : ... valid ! ...');
+          
+          if (isaxes(h2.axrl) == 1)
+            axes(h2.axrl);
+            rlocus(h1.G);
+            e = eig(h1.G);
+            ec = eig(h1.C*h1.G/(1+h1.C*h1.G));
+            eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
+            hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6); 
+            hold off;
+            
+          endif
+          if (isaxes(h2.axny) == 1)
+            axes(h2.axny);
+            nyquist(h1.G);
+          endif
+          if (isaxes(h2.axbm) == 1)
+            axes(h2.axbm);
+            bode (h1.G, 'sisotool'); 
+          endif
+          axes(h1.ax1);
+          step(h1.G); 
+        catch
+          set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
+        end_try_catch
 
-      guidata (obj1, h1)
+        guidata (obj1, h1)
 
-  endswitch
+    endswitch
 
-  if (recalc || init)
     if (init)
       axes(h1.ax1);
       step(h1.G); 
@@ -145,7 +136,7 @@ function update_plot (obj1, obj2, init = false, G)
       axes(h2.axrl);
       rlocus(h1.G);
       e = eig(h1.G);
-      ec = eig(h1.K*h1.G/(h1.H+h1.K*h1.G));
+      ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
       eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
       hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
       hold off;
@@ -160,29 +151,15 @@ function update_plot (obj1, obj2, init = false, G)
     else
       ## 
     endif
-  endif
-
 endfunction
 
-function down_fig (obj1, obj2, evt )
+function down_fig (obj1, obj2)
   global h1 h2
-  
-##  [1,1] = none
-##  [2,1] = 'x' Real Pole
-##  [3,1] = 'x' Complex Pole
-##  [4,1] = 'o' Real Zero
-##  [5,1] = 'o' Complex Zero
-##  [6,1] = Integrator
-##  [7,1] = Differentiator
-##  [8,1] = Lead
-##  [9,1] = Lag
-##  [10,1] = Notch
 
 ##  value_btn = get(h1.btn_add, "Value")
 ##  get(h1.btn_add, "Value")
 
   if (gca == h2.axrl)
-    disp(1)
     switch ( get (h1.editor_list, "Value") )
       case {1}
       case {2} ##  [2,1] = 'x' Real Pole
@@ -229,20 +206,17 @@ function down_fig (obj1, obj2, evt )
         
         h1.znew = [h1.znew; c(1)+i*c(2); c(1)-i*c(2)];
         
-      case {6}
-      case {7}
-      case {8}
-      case {9}
-      case {10}
+      case {6} ##  [6,1] = Integrator
+      case {7} ##  [7,1] = Differentiator
+      case {8} ##  [8,1] = Lead
+      case {9} ##  [9,1] = Lag
+      case {10} ##  [10,1] = Notch
     endswitch
     set (h1.editor_list, "Value", 1) 
     axes(h1.ax1);
     step(h1.G); 
     guidata (obj1, h1)
     update_plot (obj1, obj2, false, h1.G);
-##    set(h1.btn_add, "Value", 1);
-  else
-    disp(0)
   endif
   
   poles(1,:) = real(h1.pnew)'; 
@@ -263,7 +237,7 @@ function down_fig (obj1, obj2, evt )
 endfunction
 
 function update_clgain (hsrc, evt) # Update Closed-Loop Gain
-
+  
 endfunction
 
 function up_fig (hsrc, evt)
@@ -288,10 +262,13 @@ function [olpol, olzer] = getZP (sys)
   ## --------------------------------------------------------------
 endfunction
 
-function btn_add_Callback(hObject, eventdata, handles)
-  gcbo
+function btn_add_Callback(hsrc, evt)
   global h1
-  h1
+
+  switch (gcbo)
+    case {h.print_pushbutton}
+        h1.flag = 1;
+  endswitch  
 endfunction
 
 ## Push buttons
@@ -361,8 +338,7 @@ h1.editor_list = uicontrol ("style", "listbox",
                                            "Differentiator",
                                            "Lead", 
                                            "Lag", 
-                                           "Notch"},
-                                "callback", @down_fig,
+                                           "Notch"}, #"callback", @down_fig,
                                 "position", [0.5 0.08 0.38 0.22]);
 
 h1.enter_plant = uicontrol ("style", "edit",
