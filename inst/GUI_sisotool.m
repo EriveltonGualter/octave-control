@@ -12,7 +12,7 @@ s = tf('s');
 ##h1.G = 50*(s+3) / (s^ 3-s^ 2+11*s-51);  # Example
 h1.G = tf([2 5 1],[1 2 3]);
 h1.H = 1;   # Sensor
-h1.C = 0*s;  # Compensator
+h1.C = zpk([],[],1);  # Compensator
 h1.znew = [];
 h1.pnew = [];
 
@@ -29,7 +29,7 @@ fig2 = gcf ();
 set(fig2, 'Name','Diagrams','NumberTitle','off');
 
 figure;
-h1.ax1 = axes ("position", [0.05 0.45 0.9 0.5]);
+h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
 fig1 = gcf ();
 set(fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
@@ -69,16 +69,16 @@ function update_plot (obj1, obj2, init = false, G)
         h2.axbm = subplot(2,2,2); % Bode Margin Axes
         h2.axbp  = subplot(2,2,4); % Bode Phase Axes
     endswitch
-      
+        
     if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
       if (isaxes(h2.axrl) == 1)
         axes(h2.axrl);
-        [~, ~, istf] = getZP (h1.C);
-        if (istf)
-          rlocus(h1.G*h1.C);
-        else
-          rlocus(h1.G);
-        endif
+        [~, ~, ~,istf] = getZP (h1.C);
+##        if (istf)
+##          rlocus(h1.G*h1.C);
+##        else
+##          rlocus(h1.G);
+##        endif
         e = eig(h1.G);
         ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
         eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
@@ -96,6 +96,15 @@ function update_plot (obj1, obj2, init = false, G)
     endif
         
     switch (gcbo)
+      case {h1.radio_dragging}
+        set (h1.radio_add, "value", 0);
+        set(h1.radio_delete, "value", 0);
+      case {h1.radio_add}
+        set (h1.radio_dragging, "value", 0);
+        set(h1.radio_delete, "value", 0);
+      case{h1.radio_delete }
+        set (h1.radio_add, "value", 0);
+        set (h1.radio_dragging, "value", 0);
       case {h1.btn_savecontroller}
         C = h1.C;
         save controller.mat C;
@@ -105,7 +114,7 @@ function update_plot (obj1, obj2, init = false, G)
         
         try
           h1.G = eval(v);
-          h1.C = 0*s; 
+          h1.C = zpk([],[],1); 
           h1.znew = [];
           h1.pnew = [];
           
@@ -130,7 +139,8 @@ function update_plot (obj1, obj2, init = false, G)
             bode (h1.G, 'sisotool'); 
           endif
           axes(h1.ax1);
-          step(h1.G); 
+          step(feedback(h1.C*h1.G)); 
+          axes(h2.axrl);
         catch
           set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
         end_try_catch
@@ -141,7 +151,7 @@ function update_plot (obj1, obj2, init = false, G)
 
     if (init)
       axes(h1.ax1);
-      step(h1.G); 
+      step(feedback(h1.C*h1.G)); 
       
       axes(h2.axrl);
       rlocus(h1.G);
@@ -165,33 +175,35 @@ function update_plot (obj1, obj2, init = false, G)
     plotmagent();
 endfunction
 
-function select(hsrc, evt)
-  global h1
-  switch (gcbo)
-    case {h1.radio_dragging}
-      set (h1.radio_add, "value", 0);
-    case {h1.radio_add}
-      set (h1.radio_dragging, "value", 0);
-  endswitch
-endfunction
+##function select(hsrc, evt)
+##  global h1
+##  switch (gcbo)
+##    case {h1.radio_dragging}
+##      set (h1.radio_add, "value", 0);
+##      set(h1.radio_delete, "value", 0);
+##    case {h1.radio_add}
+##      set (h1.radio_dragging, "value", 0);
+##      set(h1.radio_delete, "value", 0);
+##    case{h1.radio_delete }
+##      set (h1.radio_add, "value", 0);
+##      set (h1.radio_dragging, "value", 0);
+##  endswitch
+##endfunction
 
 function down_fig(hsrc, evt)
   global h1 h2
 
+  axes(h2.axrl);
+  c = get (gca, "currentpoint")([1;3]); 
   plotcleig = 0;
-  if ( get(h1.radio_dragging, "value") && get (h1.editor_list, "Value") == 1 ) ## DRAGGING
-        c = get (gca, "currentpoint")([1;3]); 
-        [olpol, olzer, ~] = getZP (h1.C);
+  if ( get(h1.radio_dragging, "value") || get(h1.radio_delete, "value")) ## DRAGGING
+        [olpol, olzer, ~,~] = getZP (h1.C);
         poles(1,:) = [real(olpol)' real(olzer)'];
         poles(2,:) = [imag(olpol)' imag(olzer)'];
 
         p = poles - c;
         [~, idx] = min (hypot (p(1, :), p(2, :)));
-        poles(:, idx);
-        
-        axes(h2.axrl);
-        rlocus(h1.G*h1.C);
-        
+                
         hold on
         for i=1:length(poles)
           if idx == i
@@ -202,55 +214,46 @@ function down_fig(hsrc, evt)
         endfor
         hold off    
   endif
-  
+    
   if (gca == h2.axrl && get(h1.radio_add, "value"))   ## ADDING
+    disp("adding")
     switch ( get (h1.editor_list, "Value") )
       case {1}         
       case {2} ##  [2,1] = 'x' Real Pole
-        plotcleig = 1;
-        c = get (gca, "currentpoint")([1;3]);                        
-        [olpol, olzer, ~] = getZP (h1.C);
+        plotcleig = 1;                  
+        [olpol, olzer,k,~] = getZP (h1.C);
                 
-        olpol = [olpol; c(1)];
-        h1.C = zpk (olzer, olpol',[1]);
-        axes(h2.axrl);
-        rlocus(h1.G*h1.C);
+        olpol = [olpol; c(1)]
+        h1.C = zpk (olzer, olpol',k);
   
         h1.pnew = [h1.pnew; c(1)];
+        disp("add real pole")
         
       case {3} ##  [3,1] = 'x' Complex Pole
         plotcleig = 1;
-        c = get (gca, "currentpoint")([1;3]);                
-        [olpol, olzer, ~] = getZP (h1.C);
+        [olpol, olzer,k,~] = getZP (h1.C);
                 
         olpol = [olpol; c(1)+i*c(2); c(1)-i*c(2)];
-        h1.C = zpk (olzer, olpol',[1]);
-        axes(h2.axrl);
-        rlocus(h1.G*h1.C);
+        h1.C = zpk (olzer, olpol',k);
         
         h1.pnew = [h1.pnew; c(1)+i*c(2); c(1)-i*c(2)];
         
       case {4} ##  [4,1] = 'o' Real Zero
-        plotcleig = 1;
-        c = get (gca, "currentpoint")([1;3]);                
-        [olpol, olzer, ~] = getZP (h1.C);
+        plotcleig = 1;        
+        [olpol, olzer,k,~] = getZP (h1.C);
                 
-        olzer = [olzer; c(2)];
-        h1.C = zpk (olzer, olpol',[1]);
-        axes(h2.axrl);
-        rlocus(h1.G*h1.C);
+        olzer = [olzer; c(1)]
+        h1.C = zpk (olzer, olpol',k);
         
         h1.znew = [h1.znew; c(1)];
+        disp("add real zero")
         
       case {5} ##  [5,1] = 'o' Complex Zero
-        plotcleig = 1;
-        c = get (gca, "currentpoint")([1;3]);                
-        [olpol, olzer, ~] = getZP (h1.C);
+        plotcleig = 1;             
+        [olpol, olzer,k,~] = getZP (h1.C);
                 
         olzer = [olzer; c(1)+i*c(2); c(1)-i*c(2)];
-        h1.C = zpk (olzer, olpol',[1]);
-        axes(h2.axrl);
-        rlocus(h1.G*h1.C);
+        h1.C = zpk (olzer, olpol',k);
         
         h1.znew = [h1.znew; c(1)+i*c(2); c(1)-i*c(2)];
         
@@ -261,7 +264,7 @@ function down_fig(hsrc, evt)
       case {10} ##  [10,1] = Notch
     endswitch
     
-    if (plotcleig*0) % delete later: *0
+    if (plotcleig) % delete later: *0
       e = eig(h1.G);
       ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
       eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
@@ -277,29 +280,28 @@ function down_fig(hsrc, evt)
     set (h1.editor_list, "Value", 1);
     set (h1.radio_add, "value", 0);
     set (h1.radio_dragging, "value", 0);
-    axes(h1.ax1);
-    step(h1.G); 
+##    axes(h1.ax1);
+##    step(feedback(h1.C*h1.G)); 
 ##    guidata (hsrc, h1)
 ##    update_plot (obj1, obj2, false, h1.G);
   endif
   
-  plotmagent();
+##  plotmagent();
 
 ##  set (hsrc, "windowbuttonupfcn", @up_fig);
 endfunction
 
-function update_clgain (hsrc, evt) # Update Closed-Loop Gain
-  
-endfunction
 
 function up_fig (hsrc, evt)
 
   global h1 h2
+  axes(h2.axrl); 
+  c = get (gca, "currentpoint")([1;3]); 
 
-  if ( get(h1.radio_dragging, "value") ) ## DRAGGING
+  if ( get(h1.radio_delete, "value") ) ## DELETE
     
-    c = get (gca, "currentpoint")([1;3]); 
-    [olpol, olzer, ~] = getZP (h1.C);
+    h1.C
+    [olpol, olzer,k,~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
     poles(2,:) = [imag(olpol)' imag(olzer)'];
 
@@ -309,30 +311,80 @@ function up_fig (hsrc, evt)
         
     if abs(poles(2, idx)) > 0
       idxc = find(poles(2,:) == -1*poles(2, idx), 1, 'last');      
-      poles(:, idx) = c;
+      poles(:, idx) = [];
+      poles(:, idxc) = [];
+      lastpol = length(olpol);
+      if idx <= length(olpol)
+        olpol = poles(1, 1:lastpol-2) + poles(2, 1:lastpol-2)*i;
+        olzer = poles(1, lastpol-1:end) + poles(2, lastpol-1:end)*i;
+      else
+        olpol = poles(1, 1:lastpol) + poles(2, 1:lastpol)*i;
+        olzer = poles(1, lastpol+1:end) + poles(2, lastpol+1:end)*i;
+      endif
+    else
+      poles(:,idx) = [];
+      lastpol = length(olpol);
+      if idx <= length(olpol)
+        olpol = poles(1, 1:lastpol-1) + poles(2, 1:lastpol-1)*i;
+        olzer = poles(1, lastpol:end) + poles(2, lastpol:end)*i;
+      else
+        olpol = poles(1, 1:lastpol) + poles(2, 1:lastpol)*i;
+        olzer = poles(1, lastpol+1:end) + poles(2, lastpol+1:end)*i;
+      endif
+    endif
+    
+        
+    h1.C = zpk (olzer, olpol',k);
+##    axes(h2.axrl); 
+##    [~, ~,~, istf] = getZP (h1.C);
+##    if (istf)
+##      rlocus(h1.G*h1.C);
+##    else
+##      rlocus(h1.G);
+##    endif
+   endif
+   
+  if ( get(h1.radio_dragging, "value") ) ## DRAGGING
+    
+    [olpol, olzer, k, ~] = getZP (h1.C);
+    poles(1,:) = [real(olpol)' real(olzer)'];
+    poles(2,:) = [imag(olpol)' imag(olzer)'];
+
+    # find nearest point
+    p = poles - c;
+    [~, idx] = min (hypot (p(1, :), p(2, :)));
+        
+    if abs(poles(2, idx)) > 0
+      idxc = find(poles(2,:) == -1*poles(2, idx), 1, 'last');      
+      disp("imag")
+      poles(:, idx) = [c(1); c(2)];
       poles(:, idxc) = [c(1); -c(2)];
     else
       poles(1,idx) = c(1);
+      disp("real")
     endif
     
-    olpol = poles(1, 1:length(olpol)) + poles(2, 1:length(olpol))*i
+    olpol = poles(1, 1:length(olpol)) + poles(2, 1:length(olpol))*i;
     olzer = poles(1, length(olpol)+1:end) + poles(2, length(olpol)+1:end)*i;
         
-    h1.C = zpk (olzer, olpol',[1]);
-    axes(h2.axrl); 
-    [~, ~, istf] = getZP (h1.C);
-    if (istf)
-      rlocus(h1.G*h1.C);
-    else
-      rlocus(h1.G);
-    endif
+    h1.C = zpk (olzer, olpol',k);
+##    axes(h2.axrl); 
+##    rlocus(h1.G*h1.C);
+##    [~, ~, istf] = getZP (h1.C);
+##    if (istf)
+##      rlocus(h1.G*h1.C);
+##    else
+##      rlocus(h1.G);
+##    endif
    endif
        
+##  update_plot(h1,h2, false, h1.G);
   plotmagent();
+  
 endfunction
 
   
-function [olpol, olzer, flag] = getZP (sys)
+function [olpol, olzer, k, flag] = getZP (sys)
   ## Ref: rlocus.m -----------------------------------------        
   ## Convert the input to a transfer function if necessary
   [num, den] = tfdata (sys, "vector");     # extract numerator/denominator polynomials
@@ -350,7 +402,37 @@ function [olpol, olzer, flag] = getZP (sys)
   endif
   olpol = roots (den);
   olzer = roots (num);
+  [~,~,k] = zpkdata(sys);
   ## --------------------------------------------------------------
+endfunction
+
+function slider_adjustgain(hsrc, evt)
+  global h1 h2
+
+  [z,p,k] = zpkdata(h1.C);
+  k = get( h1.slider_gain, "value");
+  
+  h1.C = zpk(z,p,k);
+  
+##  axes(h2.axrl); 
+##  [~, ~, istf] = getZP (h1.C);
+##  if (istf)
+##    rlocus(h1.G*h1.C);
+##  else
+##    rlocus(h1.G);
+##  endif
+  
+  plotmagent();
+   
+  plotcleig = 1;
+  if (plotcleig) % delete later: *0
+    e = eig(h1.G*h1.C);
+    ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
+    eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
+    hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
+    hold off;
+  endif
+      
 endfunction
 
 function btn_add_Callback(hsrc, evt)
@@ -367,13 +449,18 @@ function plotmagent()
   
   [olpol, olzer, ~] = getZP (h1.C);
   
-  axes(h2.axrl);
+  axes(h2.axrl); cla
+  rlocus(h1.G*h1.C);
   if (!isempty (olpol))
     hold on; plot (real(olpol),  imag(olpol), "x", "markersize", 8, "color", "magent", "linewidth", 2);  hold off; 
   endif
   if (!isempty (olzer))
     hold on; plot (real(olzer), imag(olzer), "o", "markersize", 8, "color", "magent", "linewidth", 2); hold off;
   endif
+  
+  axes(h1.ax1);
+  step(feedback(h1.C*h1.G)); 
+  axes(h2.axrl);
 endfunction
 ## Push buttons
 h1.btn_savecontroller = uicontrol ("style", "pushbutton",
@@ -395,13 +482,13 @@ h1.lbl_diagrams = uicontrol ("style", "text",
                                "units", "normalized",
                                "string", "Diagrams:",
                                "horizontalalignment", "left",
-                               "position", [0.05 0.30 0.35 0.08]);
+                               "position", [0.05 0.35 0.35 0.08]);
 
 h1.lbl_plant = uicontrol ("style", "text",
                                "units", "normalized",
                                "string", "Transfer function : ... wainting for input ...",
                                "horizontalalignment", "left",
-                               "position", [0.05 0.05 0.35 0.06]); 
+                               "position", [0.05 0.1 0.35 0.06]); 
 ##                               "position", [0.05 0 0.35 0.06]); 
                                
 ## Radios        
@@ -410,39 +497,51 @@ h1.radio_bode = uicontrol ("style", "radiobutton",
                                     "string", "Bode",
                                     "callback", @update_plot,
                                     "value", 0,
-                                    "position", [0.05 0.20 0.15 0.04]);
+                                    "position", [0.05 0.25 0.15 0.04]);
                                     
 h1.radio_locus = uicontrol ("style", "radiobutton",
                                    "units", "normalized",
                                    "string", "Root Locus",
                                    "callback", @update_plot,
-                                   "position", [0.05 0.26 0.15 0.04]);
+                                   "position", [0.05 0.31 0.15 0.04]);
 
 h1.radio_nyquist = uicontrol ("style", "radiobutton",
                                     "units", "normalized",
                                     "string", "Nyquist",
                                     "callback", @update_plot,
                                     "value", 0,
-                                   "position", [0.05 0.14 0.15 0.04]);
+                                   "position", [0.05 0.19 0.15 0.04]);
                             
 h1.radio_dragging = uicontrol ("style", "radiobutton",
                                    "units", "normalized",
                                    "string", "Adjust",
-                                   "callback", @select,
-                                 "position", [0.7 0.3 0.1 0.08]); 
+                                   "callback", @update_plot,
+                                 "position", [0.7 0.36 0.08 0.08]); 
                                    
 h1.radio_add = uicontrol ("style", "radiobutton",
                                    "units", "normalized",
                                    "string", "Add",
-                                   "callback", @select,
-                                 "position", [0.8 0.3 0.1 0.08]); 
+                                   "callback", @update_plot,
+                                 "position", [0.79 0.36 0.08 0.08]); 
+                                 
+h1.radio_delete = uicontrol ("style", "radiobutton",
+                                   "units", "normalized",
+                                   "string", "Delete",
+                                   "callback", @update_plot,
+                                 "position", [0.87 0.36 0.08 0.08]); 
                                    
 ## markerstyle
-h1.markerstyle_label = uicontrol ("style", "text",
+h1.rlocuseditor_label = uicontrol ("style", "text",
                                  "units", "normalized",
-                                 "string", "Root Locus Editor:",
+                                 "string", "Root Locus Editor",
                                  "horizontalalignment", "left",
-                                 "position", [0.5 0.3 0.15 0.08]); 
+                                 "position", [0.5 0.35 0.16 0.08]); 
+                                 
+h1.gain_label = uicontrol ("style", "text",
+                                 "units", "normalized",
+                                 "string", "Adjust Gain:",
+                                 "horizontalalignment", "left",
+                                 "position", [0.6 0.3 0.1 0.08]); 
                                  
 h1.editor_list = uicontrol ("style", "listbox",
                                 "units", "normalized",
@@ -462,14 +561,30 @@ h1.enter_plant = uicontrol ("style", "edit",
                                "units", "normalized",
                                "string", "Enter with Plant",
                                "callback", @update_plot,
-                               "position", [0.05 0 0.35 0.06]);   
-
+                               "position", [0.05 0.05 0.35 0.06]);   
+                               
+## Slider
+h1.slider_gain = uicontrol ("style", "slider",
+                                   "units", "normalized",
+                                   "string", "Gain",
+                                   "min", 0.01,
+                                   "max", 100,
+                                   "value", 1,
+                                   "callback", @slider_adjustgain,
+                                 "position", [0.7 0.32 0.25 0.04]); 
+##
+##%%%%%%%%%%%%%%%%
+##"position", [0.7 0.35 0.1 0.08]); 
+##"position", [0.8 0.35 0.1 0.08]); 
+##"position", [0.9 0.35 0.1 0.08]); 
+##%%%%%%%%%%%%%%%%%%%%
+                                 
   ##{@down_fig, ax12,  olpol, olzer});  
 set (fig2, "windowbuttondownfcn", @down_fig);
-set (fig2, "windowbuttonmotionfcn", @update_clgain)
+##set (fig2, "windowbuttonmotionfcn", @update_clgain)
 set (fig2, "windowbuttonupfcn", @up_fig)
 
-update_clgain (fig2, [])
+##update_clgain (fig2, [])
 
 set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)
