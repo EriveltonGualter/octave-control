@@ -1,84 +1,82 @@
-## 20.03.2017 Andreas Weber <andy@josoansi.de>
-## Demo which has the aim to show all available GUI elements.
-## Useful since Octave 4.0
+## 16.06.2016 Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
+## sisotool
 
-close all
-clear all
-
-global h1 h2
-
-% Initial Plant (Only for test)
-s = tf('s');
-##h1.G = 50*(s+3) / (s^ 3-s^ 2+11*s-51);  # Example
-h1.G = tf([2 5 1],[1 2 3]);
-h1.H = 1;   # Sensor
-h1.C = zpk([],[],1);  # Compensator
-h1.znew = [];
-h1.pnew = [];
+## Author: Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
 
 graphics_toolkit qt
 
-figure('Name','sisotool- Control System Designer v0 - 2','NumberTitle','off');
+## Delete it later (Only for debug) -------------------------------------------------------------------------------
+close all 
+clear all
+## -------------------------------------------------------------------------------------------------------------------------------
 
+## For now, I am using global variables. It will be modified
+global h1 h2
+
+% Initizailiation of the variables
+h1.H = 1;   # Sensor
+h1.C = zpk([],[],1);  # Compensator
+
+% Initial Plant (Only for test)
+h1.G = tf([2 5 1],[1 2 3]);
+
+% Creating Figures (Main GUI and Diagrams) 
+fig2 = figure;
 h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
-h2.axbm = subplot(2,2,2); % Bode Margin Axes
-h2.axbp  = subplot(2,2,4); % Bode Phase Axes
-h2.axny  = subplot(2,2,2); % Nyquist Axes
-
-fig2 = gcf ();
+h2.axbm = subplot(2,2,2);       % Bode Margin Axes
+h2.axbp  = subplot(2,2,4);       % Bode Phase Axes
+h2.axny  = subplot(2,2,2);       % Nyquist Axes
 set(fig2, 'Name','Diagrams','NumberTitle','off');
 
-figure;
+fig1 = figure;
 h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
-fig1 = gcf ();
-set(fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
-
 position = get (fig1, "position");
-set (fig1, "position", position + [-100 -100 +290 +60]) 
+##set (fig1, "position", position + [-100 -100 +290 +60]) 
+set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
+
+%%% TESTE
+uimenu (fig1, 'label', 'Erivelton', 'accelerator', 'q', 'callback', 'close (gcf)');
+uimenu (fig2, 'label', 'EriToggle &Grid', 'accelerator', 'g', 'callback', 'grid (gca)');
+%%%%%%%
 
 function update_plot (obj1, obj2, init = false, G)
     global h1 h2
-    ## gcbo holds the handle of the control
       
+    ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
-    set(0, 'currentfigure', 1);  %# for figures
+    set(0, 'currentfigure', 1); 
     switch (diag)
       case {[ 1 0 0]}
-        h2.axrl    = subplot(2,2,[1 2 3 4]); % Root Locus 
+        h2.axrl    = subplot(2,2,[1 2 3 4]); 
       case {[ 0 1 0]}
-        h2.axbm = subplot(2,2,[1 2]); % Bode Margin Axes
-        h2.axbp  = subplot(2,2,[3 4]); % Bode Phase Axes
+        h2.axbm = subplot(2,2,[1 2]);
+        h2.axbp  = subplot(2,2,[3 4]); 
       case {[ 0 0 1]}
-        h2.axny   = subplot(2,2,[1 2 3 4]); % Root Locus 
-      
+        h2.axny   = subplot(2,2,[1 2 3 4]);
+   
       case {[ 0 1 1]}
-        h2.axny  = subplot(2,2,[1 3]); % Nyquist Axes
-        h2.axbm = subplot(2,2,2); % Bode Margin Axes
-        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+        h2.axny  = subplot(2,2,[1 3]); 
+        h2.axbm = subplot(2,2,2);
+        h2.axbp  = subplot(2,2,4);
       case {[ 1 0 1]}
-        h2.axrl    = subplot(2,1,1); % Root Locus Axes
-        h2.axny  = subplot(2,1,2); % Nyquist Axes
+        h2.axrl    = subplot(2,1,1); 
+        h2.axny  = subplot(2,1,2); 
       case {[ 1 1 0]}
-        h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
-        h2.axbm = subplot(2,2,2); % Bode Margin Axes
-        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+        h2.axrl    = subplot(2,2,[1 3]);
+        h2.axbm = subplot(2,2,2); 
+        h2.axbp  = subplot(2,2,4);
         
       case {[ 1 1 1]}
-        h2.axrl    = subplot(2,2,1); % Root Locus Axes
-        h2.axny  = subplot(2,2,3); % Nyquist Axes
-        h2.axbm = subplot(2,2,2); % Bode Margin Axes
-        h2.axbp  = subplot(2,2,4); % Bode Phase Axes
+        h2.axrl    = subplot(2,2,1);
+        h2.axny  = subplot(2,2,3);
+        h2.axbm = subplot(2,2,2);
+        h2.axbp  = subplot(2,2,4);
     endswitch
         
+    ## Plot diagrams if any of the radio buttons is pressed 
     if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
-      if (isaxes(h2.axrl) == 1)
+      if (isaxes(h2.axrl) == 1)   
         axes(h2.axrl);
-        [~, ~, ~,istf] = getZP (h1.C);
-##        if (istf)
-##          rlocus(h1.G*h1.C);
-##        else
-##          rlocus(h1.G);
-##        endif
         e = eig(h1.G);
         ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
         eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
@@ -110,16 +108,15 @@ function update_plot (obj1, obj2, init = false, G)
         save controller.mat C;
       case {h1.enter_plant}
         s = tf('s');
-        v = get (gcbo, "string")
+        v = get (gcbo, "string");
         
+        ## Try-catch for plant input
         try
           h1.G = eval(v);
           h1.C = zpk([],[],1); 
-          h1.znew = [];
-          h1.pnew = [];
-          
+
           set(h1.lbl_plant, 'String', 'Transfer function : ... valid ! ...');
-          
+
           if (isaxes(h2.axrl) == 1)
             axes(h2.axrl);
             rlocus(h1.G);
@@ -128,7 +125,6 @@ function update_plot (obj1, obj2, init = false, G)
             eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
             hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6); 
             hold off;
-            
           endif
           if (isaxes(h2.axny) == 1)
             axes(h2.axny);
@@ -138,9 +134,9 @@ function update_plot (obj1, obj2, init = false, G)
             axes(h2.axbm);
             bode (h1.G, 'sisotool'); 
           endif
-          axes(h1.ax1);
-          step(feedback(h1.C*h1.G)); 
-          axes(h2.axrl);
+            axes(h1.ax1);
+            step(feedback(h1.C*h1.G)); 
+            axes(h2.axrl);
         catch
           set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
         end_try_catch
@@ -149,6 +145,7 @@ function update_plot (obj1, obj2, init = false, G)
 
     endswitch
 
+    ## Initial Plot (IT WILL BE CHANGED)
     if (init)
       axes(h1.ax1);
       step(feedback(h1.C*h1.G)); 
@@ -168,35 +165,20 @@ function update_plot (obj1, obj2, init = false, G)
       set (h1.radio_locus, "value", 1);
       
       guidata (obj1, h1);
-    else
-      ## 
     endif
     
     plotmagent();
 endfunction
 
-##function select(hsrc, evt)
-##  global h1
-##  switch (gcbo)
-##    case {h1.radio_dragging}
-##      set (h1.radio_add, "value", 0);
-##      set(h1.radio_delete, "value", 0);
-##    case {h1.radio_add}
-##      set (h1.radio_dragging, "value", 0);
-##      set(h1.radio_delete, "value", 0);
-##    case{h1.radio_delete }
-##      set (h1.radio_add, "value", 0);
-##      set (h1.radio_dragging, "value", 0);
-##  endswitch
-##endfunction
-
 function down_fig(hsrc, evt)
   global h1 h2
-
-  axes(h2.axrl);
-  c = get (gca, "currentpoint")([1;3]); 
   plotcleig = 0;
-  if ( get(h1.radio_dragging, "value") || get(h1.radio_delete, "value")) ## DRAGGING
+  
+  axes(h2.axrl);
+  c = get (gca, "currentpoint")([1;3]);   %% Current position of the mouse
+  
+  ## Plot black circle around the closest pole or zero.
+  if ( get(h1.radio_dragging, "value") || get(h1.radio_delete, "value")) 
         [olpol, olzer, ~,~] = getZP (h1.C);
         poles(1,:) = [real(olpol)' real(olzer)'];
         poles(2,:) = [imag(olpol)' imag(olzer)'];
@@ -215,53 +197,44 @@ function down_fig(hsrc, evt)
         hold off    
   endif
     
-  if (gca == h2.axrl && get(h1.radio_add, "value"))   ## ADDING
-    disp("adding")
-    switch ( get (h1.editor_list, "Value") )
-      case {1}         
-      case {2} ##  [2,1] = 'x' Real Pole
+  ## ADDING action
+  if (gca == h2.axrl && get(h1.radio_add, "value"))   
+    switch ( get (h1.editor_list, "Value") )   
+      case {2} ## Add 'x' Real Pole
         plotcleig = 1;                  
         [olpol, olzer,k,~] = getZP (h1.C);
                 
-        olpol = [olpol; c(1)]
+        olpol = [olpol; c(1)];
         h1.C = zpk (olzer, olpol',k);
-  
-        h1.pnew = [h1.pnew; c(1)];
+        
         disp("add real pole")
         
-      case {3} ##  [3,1] = 'x' Complex Pole
+      case {3} ##  Add 'xx' Complex Pole
         plotcleig = 1;
         [olpol, olzer,k,~] = getZP (h1.C);
                 
         olpol = [olpol; c(1)+i*c(2); c(1)-i*c(2)];
         h1.C = zpk (olzer, olpol',k);
         
-        h1.pnew = [h1.pnew; c(1)+i*c(2); c(1)-i*c(2)];
-        
-      case {4} ##  [4,1] = 'o' Real Zero
+      case {4} ##  Add 'o' Real Zero
         plotcleig = 1;        
         [olpol, olzer,k,~] = getZP (h1.C);
                 
-        olzer = [olzer; c(1)]
+        olzer = [olzer; c(1)];
         h1.C = zpk (olzer, olpol',k);
         
-        h1.znew = [h1.znew; c(1)];
-        disp("add real zero")
-        
-      case {5} ##  [5,1] = 'o' Complex Zero
+      case {5} ##  Add  'oo' Complex Zero
         plotcleig = 1;             
         [olpol, olzer,k,~] = getZP (h1.C);
                 
         olzer = [olzer; c(1)+i*c(2); c(1)-i*c(2)];
         h1.C = zpk (olzer, olpol',k);
-        
-        h1.znew = [h1.znew; c(1)+i*c(2); c(1)-i*c(2)];
-        
-      case {6} ##  [6,1] = Integrator
-      case {7} ##  [7,1] = Differentiator
-      case {8} ##  [8,1] = Lead
-      case {9} ##  [9,1] = Lag
-      case {10} ##  [10,1] = Notch
+                
+      case {6} ##  Add Integrator
+      case {7} ##  Add Differentiator
+      case {8} ##  Add Lead
+      case {9} ##  Add Lag
+      case {10} ##  Add Notch
     endswitch
     
     if (plotcleig) % delete later: *0
@@ -277,22 +250,19 @@ function down_fig(hsrc, evt)
       nyquist(h1.G);
     endif
       
-    set (h1.editor_list, "Value", 1);
+    set (h1.editor_list, "Value", 1); %% Set none in the list
     set (h1.radio_add, "value", 0);
-    set (h1.radio_dragging, "value", 0);
-##    axes(h1.ax1);
-##    step(feedback(h1.C*h1.G)); 
-##    guidata (hsrc, h1)
-##    update_plot (obj1, obj2, false, h1.G);
-  endif
-  
-##  plotmagent();
 
-##  set (hsrc, "windowbuttonupfcn", @up_fig);
+  endif
+
 endfunction
 
 
-function up_fig (hsrc, evt)
+function release_click (hsrc, evt)
+## release_click (hsrc, evt)
+##
+## This function controls the action when the mouse is release.
+## The action depends on the Roots Editor Action: ADJUST, DELETE OR DELETE
 
   global h1 h2
   axes(h2.axrl); 
@@ -332,16 +302,8 @@ function up_fig (hsrc, evt)
         olzer = poles(1, lastpol+1:end) + poles(2, lastpol+1:end)*i;
       endif
     endif
-    
         
     h1.C = zpk (olzer, olpol',k);
-##    axes(h2.axrl); 
-##    [~, ~,~, istf] = getZP (h1.C);
-##    if (istf)
-##      rlocus(h1.G*h1.C);
-##    else
-##      rlocus(h1.G);
-##    endif
    endif
    
   if ( get(h1.radio_dragging, "value") ) ## DRAGGING
@@ -368,42 +330,45 @@ function up_fig (hsrc, evt)
     olzer = poles(1, length(olpol)+1:end) + poles(2, length(olpol)+1:end)*i;
         
     h1.C = zpk (olzer, olpol',k);
-##    axes(h2.axrl); 
-##    rlocus(h1.G*h1.C);
-##    [~, ~, istf] = getZP (h1.C);
-##    if (istf)
-##      rlocus(h1.G*h1.C);
-##    else
-##      rlocus(h1.G);
-##    endif
+
    endif
        
-##  update_plot(h1,h2, false, h1.G);
   plotmagent();
   
 endfunction
 
   
 function [olpol, olzer, k, flag] = getZP (sys)
-  ## Ref: rlocus.m -----------------------------------------        
+## [olpol, olzer, k, flag] = getZP (sys)
+##
+## Return the poles/zeros/gain and if the "sys". (based on rlocus.m)
+## 
+## Input:
+##      sys: LTI system
+##  Outputs:
+##      olpol = 1 x number of poles = Array of Poles 
+##      olzer = 1 x number of zeros = Array of zeros 
+##      k = 1x1 = Gain
+##      flag = '1' if sys is a LTI system, otherwise '0' 
+
   ## Convert the input to a transfer function if necessary
   [num, den] = tfdata (sys, "vector");     # extract numerator/denominator polynomials
   lnum = length (num);
   lden = length (den);
+  
   ## equalize length of num, den polynomials
   ## TODO: handle case lnum > lden (non-proper models)
-  flag = 1; # temp
   if (lden < 2)
-##    error ("rlocus: system has no poles");
+    ## error ("rlocus: system has no poles");
     flag = 0;
   elseif (lnum < lden)
     num = [zeros(1,lden-lnum), num];       # so that derivative is shortened by one
     flag = 1;
   endif
+
   olpol = roots (den);
   olzer = roots (num);
   [~,~,k] = zpkdata(sys);
-  ## --------------------------------------------------------------
 endfunction
 
 function slider_adjustgain(hsrc, evt)
@@ -435,15 +400,6 @@ function slider_adjustgain(hsrc, evt)
       
 endfunction
 
-function btn_add_Callback(hsrc, evt)
-  global h1
-
-  switch (gcbo)
-    case {h.print_pushbutton}
-        h1.flag = 1;
-  endswitch  
-endfunction
-
 function plotmagent()
   global h1 h2
   
@@ -462,22 +418,17 @@ function plotmagent()
   step(feedback(h1.C*h1.G)); 
   axes(h2.axrl);
 endfunction
+
+## UI Elements 
+
 ## Push buttons
 h1.btn_savecontroller = uicontrol ("style", "pushbutton",
                                 "units", "normalized",
                                 "string", "Save Controller",
                                 "callback", @update_plot,
-                                "position", [0.5 0 0.2 0.06]);   #"position", [0.7 0.45 0.35 0.09]);
-                                #"position", [0.75 0 0.2 0.06]);   #"position", [0.7 0.45 0.35 0.09]);
+                                "position", [0.5 0 0.2 0.06]);  
                                 
-#### Push buttons
-##h1.btn_add = uicontrol ("style", "pushbutton",
-##                                "units", "normalized",
-##                                "string", "Add",
-##                                "callback", @btn_add_Callback,
-##                                "position", [0.5 0 0.2 0.06]);   #"position", [0.7 0.45 0.35 0.09]);
-
-## linecolor
+## Labels
 h1.lbl_diagrams = uicontrol ("style", "text",
                                "units", "normalized",
                                "string", "Diagrams:",
@@ -489,8 +440,19 @@ h1.lbl_plant = uicontrol ("style", "text",
                                "string", "Transfer function : ... wainting for input ...",
                                "horizontalalignment", "left",
                                "position", [0.05 0.1 0.35 0.06]); 
-##                               "position", [0.05 0 0.35 0.06]); 
-                               
+            
+h1.rlocuseditor_label = uicontrol ("style", "text",
+                                 "units", "normalized",
+                                 "string", "Root Locus Editor",
+                                 "horizontalalignment", "left",
+                                 "position", [0.5 0.35 0.16 0.08]); 
+                                 
+h1.gain_label = uicontrol ("style", "text",
+                                 "units", "normalized",
+                                 "string", "Adjust Gain:",
+                                 "horizontalalignment", "left",
+                                 "position", [0.6 0.3 0.1 0.08]); 
+                                 
 ## Radios        
 h1.radio_bode = uicontrol ("style", "radiobutton",
                                     "units", "normalized",
@@ -529,27 +491,15 @@ h1.radio_delete = uicontrol ("style", "radiobutton",
                                    "string", "Delete",
                                    "callback", @update_plot,
                                  "position", [0.87 0.36 0.08 0.08]); 
-                                   
-## markerstyle
-h1.rlocuseditor_label = uicontrol ("style", "text",
-                                 "units", "normalized",
-                                 "string", "Root Locus Editor",
-                                 "horizontalalignment", "left",
-                                 "position", [0.5 0.35 0.16 0.08]); 
-                                 
-h1.gain_label = uicontrol ("style", "text",
-                                 "units", "normalized",
-                                 "string", "Adjust Gain:",
-                                 "horizontalalignment", "left",
-                                 "position", [0.6 0.3 0.1 0.08]); 
-                                 
+
+## Editor List
 h1.editor_list = uicontrol ("style", "listbox",
                                 "units", "normalized",
                                 "string", {"none",
                                            "'x' Real Pole",
-                                           "'x' Complex Pole",
+                                           "'xx' Complex Pole",
                                            "'o' Real Zero",
-                                           "'o' Complex Zero",
+                                           "'oo' Complex Zero",
                                            "Integrator",
                                            "Differentiator",
                                            "Lead", 
@@ -557,6 +507,7 @@ h1.editor_list = uicontrol ("style", "listbox",
                                            "Notch"}, #"callback", @down_fig,
                                 "position", [0.5 0.08 0.38 0.22]);
 
+## Edit Box
 h1.enter_plant = uicontrol ("style", "edit",
                                "units", "normalized",
                                "string", "Enter with Plant",
@@ -572,19 +523,11 @@ h1.slider_gain = uicontrol ("style", "slider",
                                    "value", 1,
                                    "callback", @slider_adjustgain,
                                  "position", [0.7 0.32 0.25 0.04]); 
-##
-##%%%%%%%%%%%%%%%%
-##"position", [0.7 0.35 0.1 0.08]); 
-##"position", [0.8 0.35 0.1 0.08]); 
-##"position", [0.9 0.35 0.1 0.08]); 
-##%%%%%%%%%%%%%%%%%%%%
-                                 
-  ##{@down_fig, ax12,  olpol, olzer});  
+
+## Calbacks
 set (fig2, "windowbuttondownfcn", @down_fig);
 ##set (fig2, "windowbuttonmotionfcn", @update_clgain)
-set (fig2, "windowbuttonupfcn", @up_fig)
-
-##update_clgain (fig2, [])
+set (fig2, "windowbuttonupfcn", @release_click)
 
 set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)
