@@ -34,12 +34,31 @@ position = get (fig1, "position");
 ##set (fig1, "position", position + [-100 -100 +290 +60]) 
 set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
-%%% TESTE
-uimenu (fig1, 'label', 'Erivelton', 'accelerator', 'q', 'callback', 'close (gcf)');
-uimenu (fig2, 'label', 'EriToggle &Grid', 'accelerator', 'g', 'callback', 'grid (gca)');
+
+## MENUS
+
+view_menu = uimenu (fig1, 'label', '&View');
+uimenu (view_menu, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
+uimenu (view_menu, 'label', 'Bode Diagram', 'accelerator', 'b', 'callback', 'call_view_bode');
+uimenu (view_menu, 'label', 'Nyquist',            'accelerator', 'n', 'callback', 'call_view_nyquist');
+
+add_menu = uimenu (fig1, 'label', '&Add');
+uimenu (add_menu, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
+uimenu (add_menu, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
+uimenu (add_menu, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
+uimenu (add_menu, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
+uimenu (add_menu, 'label', "Integrator",               'callback', 'call_pendig');
+uimenu (add_menu, 'label', "Differentiator",          'callback', 'call_pendig');
+uimenu (add_menu, 'label',  "Lead",                      'callback', 'call_pendig');
+uimenu (add_menu, 'label', "Lag",                         'callback', 'call_pendig');
+uimenu (add_menu, 'label', "Notch",                     'callback', 'call_pendig');
+                                
+controller_menu = uimenu(fig1, 'label', '&Controller');
+uimenu(controller_menu, 'label', 'Save', 'callback', 'call_save_controlller');
+
 %%%%%%%
 
-function update_plot (obj1, obj2, init = false, G)
+function update_plot (init = false)
     global h1 h2
       
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
@@ -141,8 +160,6 @@ function update_plot (obj1, obj2, init = false, G)
           set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
         end_try_catch
 
-        guidata (obj1, h1)
-
     endswitch
 
     ## Initial Plot (IT WILL BE CHANGED)
@@ -164,7 +181,6 @@ function update_plot (obj1, obj2, init = false, G)
       set (h1.radio_bode, "value", 1);
       set (h1.radio_locus, "value", 1);
       
-      guidata (obj1, h1);
     endif
     
     plotmagent();
@@ -419,6 +435,87 @@ function plotmagent()
   axes(h2.axrl);
 endfunction
 
+
+## Callbacks Menu 
+
+## Menu tab to display Root Locus Diagram
+function call_view_rootlocus (hsrc, evt)
+  global h1 h2
+  
+  if (get(h1.radio_locus, 'Value'))
+    set(h1.radio_locus, 'Value',0);
+  else
+    set(h1.radio_locus, 'Value',1);
+  endif
+  
+  update_plot (false);
+endfunction
+
+## Menu tab to display Bode Diagram
+function call_view_bode (hsrc, evt)
+  global h1 h2
+  
+  if (get(h1.radio_bode, 'Value'))
+    set(h1.radio_bode, 'Value',0);
+  else
+    set(h1.radio_bode, 'Value',1);
+  endif
+  
+  update_plot (false);
+endfunction
+
+## Menu tab to display Nyquist Diagram
+function call_view_nyquist (hsrc, evt)
+  global h1 h2
+  
+  if (get(h1.radio_nyquist, 'Value'))
+    set(h1.radio_nyquist, 'Value',0);
+  else
+    set(h1.radio_nyquist, 'Value',1);
+  endif
+  
+  update_plot (false);
+endfunction
+
+## Menu tab to add poles
+function call_add_poles(hsrc, evt) 
+  global h1 h2
+  set(h1.radio_add, 'Value', 1);
+  set (h1.editor_list, "Value", 2);
+endfunction
+
+## Menu tab to add complex poles
+function call_add_cpoles(hsrc, evt)
+  global h1 h2
+  set(h1.radio_add, 'Value', 1);
+  set (h1.editor_list, "Value", 3);
+endfunction
+
+## Menu tab to add zeros
+function call_add_zeros(hsrc, evt)
+  global h1 h2
+  set(h1.radio_add, 'Value', 1);
+  set (h1.editor_list, "Value", 4);
+endfunction
+
+## Menu tab to add complex zeros
+function call_add_czeros(hsrc, evt)
+  global h1 h2
+  set(h1.radio_add, 'Value', 1);
+  set (h1.editor_list, "Value", 5);
+endfunction
+
+
+function call_save_controlller(hsrc, evt)
+  global h1 h2
+  C = h1.C;
+  save controller.mat C;
+endfunction
+
+function call_pendig(hsrc, evt)
+  disp('Pending Function');
+endfunction
+
 ## UI Elements 
 
 ## Push buttons
@@ -532,5 +629,5 @@ set (fig2, "windowbuttonupfcn", @release_click)
 set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)
 guidata (fig2, h2)
-update_plot (fig1, fig2, true, h1.G);
+update_plot (true);
 
