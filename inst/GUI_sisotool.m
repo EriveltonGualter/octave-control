@@ -37,24 +37,50 @@ set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
 ## MENUS
 
-view_menu = uimenu (fig1, 'label', '&View');
-uimenu (view_menu, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
-uimenu (view_menu, 'label', 'Bode Diagram', 'accelerator', 'b', 'callback', 'call_view_bode');
-uimenu (view_menu, 'label', 'Nyquist',            'accelerator', 'n', 'callback', 'call_view_nyquist');
+# Fig1 
+view_menu1 = uimenu (fig1, 'label', '&View');
 
-add_menu = uimenu (fig1, 'label', '&Add');
-uimenu (add_menu, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
-uimenu (add_menu, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
-uimenu (add_menu, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
-uimenu (add_menu, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
-uimenu (add_menu, 'label', "Integrator",               'callback', 'call_pendig');
-uimenu (add_menu, 'label', "Differentiator",          'callback', 'call_pendig');
-uimenu (add_menu, 'label',  "Lead",                      'callback', 'call_pendig');
-uimenu (add_menu, 'label', "Lag",                         'callback', 'call_pendig');
-uimenu (add_menu, 'label', "Notch",                     'callback', 'call_pendig');
+uimenu (view_menu1, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
+uimenu (view_menu1, 'label', 'Bode Diagram', 'accelerator', 'b', 'callback', 'call_view_bode');
+uimenu (view_menu1, 'label', 'Nyquist',            'accelerator', 'n', 'callback', 'call_view_nyquist');
+
+add_menu1 = uimenu (fig1, 'label', '&Add');
+uimenu (add_menu1, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
+uimenu (add_menu1, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
+uimenu (add_menu1, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
+uimenu (add_menu1, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
+uimenu (add_menu1, 'label', "Integrator",               'callback', 'call_pendig');
+uimenu (add_menu1, 'label', "Differentiator",          'callback', 'call_pendig');
+uimenu (add_menu1, 'label',  "Lead",                      'callback', 'call_pendig');
+uimenu (add_menu1, 'label', "Lag",                         'callback', 'call_pendig');
+uimenu (add_menu1, 'label', "Notch",                     'callback', 'call_pendig');
                                 
-controller_menu = uimenu(fig1, 'label', '&Controller');
-uimenu(controller_menu, 'label', 'Save', 'callback', 'call_save_controlller');
+controller_menu1 = uimenu(fig1, 'label', '&Controller');
+uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
+
+
+# Fig2
+view_menu2 = uimenu (fig2, 'label', '&View');
+
+uimenu (view_menu2, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
+uimenu (view_menu2, 'label', 'Bode Diagram', 'accelerator', 'b', 'callback', 'call_view_bode');
+uimenu (view_menu2, 'label', 'Nyquist',            'accelerator', 'n', 'callback', 'call_view_nyquist');
+
+add_menu2 = uimenu (fig2, 'label', '&Add');
+uimenu (add_menu2, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
+uimenu (add_menu2, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
+uimenu (add_menu2, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
+uimenu (add_menu2, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
+uimenu (add_menu2, 'label', "Integrator",               'callback', 'call_pendig');
+uimenu (add_menu2, 'label', "Differentiator",          'callback', 'call_pendig');
+uimenu (add_menu2, 'label',  "Lead",                      'callback', 'call_pendig');
+uimenu (add_menu2, 'label', "Lag",                         'callback', 'call_pendig');
+uimenu (add_menu2, 'label', "Notch",                     'callback', 'call_pendig');
+                                
+controller_menu2 = uimenu(fig2, 'label', '&Controller');
+uimenu(controller_menu2, 'label', 'Save', 'callback', 'call_save_controlller');
+
+
 
 %%%%%%%
 
