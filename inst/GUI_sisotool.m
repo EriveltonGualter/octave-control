@@ -135,6 +135,58 @@ function update_plot (init = false)
       if (isaxes(h2.axbm) == 1)
         axes(h2.axbm);
         bode (h1.G, 'sisotool'); 
+              [MAG, PHA, W] = bode (h1.G); 
+              MAG = mag2db(MAG);
+
+              [olpol, olzer, k,~] = getZP (h1.G);
+              poles(1,:) = real(olpol)';
+              poles(2,:) = imag(olpol)';
+
+              zeros(1,:) = real(olzer)';
+              zeros(2,:) = imag(olzer)';
+
+              wparray = sqrt(poles(1,:).*poles(1,:) + poles(2,:).*poles(2,:));
+              wzarray = sqrt(zeros(1,:).*zeros(1,:) + zeros(2,:).*zeros(2,:));
+
+              if (length(wparray) > 0)
+                for i=1:length(wparray)
+                  idxp(i) = find(W <= wparray(i), 1, 'last');      
+                endfor
+                axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
+                axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
+              endif
+
+              if (length(wzarray) > 0)
+                for i=1:length(wzarray)
+                  idxz(i) = find(W <= wzarray(i), 1, 'last');      
+                endfor
+                axes(h2.axbm ); hold on; plot(W(idxz), MAG(idxz), 'o', "markersize", 8, "linewidth", 4);  hold off;
+                axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "markersize", 8, "linewidth", 4); hold off;
+              endif
+
+                [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
+
+                Gm = round(Gm*10)/10
+                Pm = round(Pm*10)/10
+                Wgm = round(Wgm*10)/10
+                Wpm = round(Wpm*10)/10
+
+                descrm = {strcat('G.M:  ',num2str(Gm)) ; 
+                                strcat('Freq:  ', num2str(Wgm))};
+                                        
+                descrp = {strcat('P.M:  ',num2str(Pm)) ; 
+                                strcat('Freq:  ', num2str(Wpm))};     
+                    
+                axes(h2.axbm) ;  grid off
+                xLim = get(gca,'XLim')  %# Get the range of the x axis
+                yLim = get(gca,'YLim')  %# Get the range of the y axis
+                text(min(xLim), median(yLim),descrm)
+
+                axes(h2.axbp);  grid off  
+                xLim = get(gca,'XLim')  %# Get the range of the x axis
+                yLim = get(gca,'YLim')  %# Get the range of the y axis
+                text(min(xLim), median(yLim),descrp);
+                
       endif
     endif
         
@@ -202,7 +254,58 @@ function update_plot (init = false)
       hold off;
 
       axes(h2.axbm);
-      bode (h1.G, 'sisotool'); 
+              bode (h1.G, 'sisotool'); 
+              [MAG, PHA, W] = bode (h1.G); 
+              MAG = mag2db(MAG);
+
+              [olpol, olzer, k,~] = getZP (h1.G);
+              poles(1,:) = real(olpol)';
+              poles(2,:) = imag(olpol)';
+
+              zeros(1,:) = real(olzer)';
+              zeros(2,:) = imag(olzer)';
+
+              wparray = sqrt(poles(1,:).*poles(1,:) + poles(2,:).*poles(2,:));
+              wzarray = sqrt(zeros(1,:).*zeros(1,:) + zeros(2,:).*zeros(2,:));
+
+              if (length(wparray) > 0)
+                for i=1:length(wparray)
+                  idxp(i) = find(W <= wparray(i), 1, 'last');      
+                endfor
+                axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
+                axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
+              endif
+
+              if (length(wzarray) > 0)
+                for i=1:length(wzarray)
+                  idxz(i) = find(W <= wzarray(i), 1, 'last');      
+                endfor
+                axes(h2.axbm ); hold on; plot(W(idxz), MAG(idxz), 'o', "markersize", 8, "linewidth", 4);  hold off;
+                axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "markersize", 8, "linewidth", 4); hold off;
+              endif
+
+                [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
+
+                Gm = round(Gm*10)/10
+                Pm = round(Pm*10)/10
+                Wgm = round(Wgm*10)/10
+                Wpm = round(Wpm*10)/10
+
+                descrm = {strcat('G.M:  ',num2str(Gm)) ; 
+                                strcat('Freq:  ', num2str(Wgm))};
+                                        
+                descrp = {strcat('P.M:  ',num2str(Pm)) ; 
+                                strcat('Freq:  ', num2str(Wpm))};     
+                    
+                axes(h2.axbm) ;  grid off
+                xLim = get(gca,'XLim')  %# Get the range of the x axis
+                yLim = get(gca,'YLim')  %# Get the range of the y axis
+                text(min(xLim), median(yLim),descrm)
+
+                axes(h2.axbp);  grid off  
+                xLim = get(gca,'XLim')  %# Get the range of the x axis
+                yLim = get(gca,'YLim')  %# Get the range of the y axis
+                text(min(xLim), median(yLim),descrp);
 
       set (h1.radio_bode, "value", 1);
       set (h1.radio_locus, "value", 1);
