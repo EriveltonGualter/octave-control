@@ -19,6 +19,7 @@ h1.C = zpk([],[],1);  # Compensator
 
 % Initial Plant (Only for test)
 h1.G = tf([2 5 1],[1 2 3]);
+##h1.G = zpk([], -30, 100);
 
 % Creating Figures (Main GUI and Diagrams) 
 fig2 = figure;
@@ -27,11 +28,11 @@ h2.axbm = subplot(2,2,2);       % Bode Margin Axes
 h2.axbp  = subplot(2,2,4);       % Bode Phase Axes
 h2.axny  = subplot(2,2,2);       % Nyquist Axes
 set(fig2, 'Name','Diagrams','NumberTitle','off');
+##position = get (fig2, "position");
+##set (fig2, "position", position + [-50 -50 +250 +250]) ;
 
 fig1 = figure;
 h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
-position = get (fig1, "position");
-##set (fig1, "position", position + [-100 -100 +290 +60]) 
 set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
 
@@ -85,6 +86,7 @@ uimenu(controller_menu2, 'label', 'Save', 'callback', 'call_save_controlller');
 %%%%%%%
 
 function update_plot (init = false)
+  disp('DEG: update_plot');
     global h1 h2
       
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
@@ -134,59 +136,7 @@ function update_plot (init = false)
       endif
       if (isaxes(h2.axbm) == 1)
         axes(h2.axbm);
-        bode (h1.G, 'sisotool'); 
-              [MAG, PHA, W] = bode (h1.G); 
-              MAG = mag2db(MAG);
-
-              [olpol, olzer, k,~] = getZP (h1.G);
-              poles(1,:) = real(olpol)';
-              poles(2,:) = imag(olpol)';
-
-              zeros(1,:) = real(olzer)';
-              zeros(2,:) = imag(olzer)';
-
-              wparray = sqrt(poles(1,:).*poles(1,:) + poles(2,:).*poles(2,:));
-              wzarray = sqrt(zeros(1,:).*zeros(1,:) + zeros(2,:).*zeros(2,:));
-
-              if (length(wparray) > 0)
-                for i=1:length(wparray)
-                  idxp(i) = find(W <= wparray(i), 1, 'last');      
-                endfor
-                axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
-                axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
-              endif
-
-              if (length(wzarray) > 0)
-                for i=1:length(wzarray)
-                  idxz(i) = find(W <= wzarray(i), 1, 'last');      
-                endfor
-                axes(h2.axbm ); hold on; plot(W(idxz), MAG(idxz), 'o', "markersize", 8, "linewidth", 4);  hold off;
-                axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "markersize", 8, "linewidth", 4); hold off;
-              endif
-
-                [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
-
-                Gm = round(Gm*10)/10
-                Pm = round(Pm*10)/10
-                Wgm = round(Wgm*10)/10
-                Wpm = round(Wpm*10)/10
-
-                descrm = {strcat('G.M:  ',num2str(Gm)) ; 
-                                strcat('Freq:  ', num2str(Wgm))};
-                                        
-                descrp = {strcat('P.M:  ',num2str(Pm)) ; 
-                                strcat('Freq:  ', num2str(Wpm))};     
-                    
-                axes(h2.axbm) ;  grid off
-                xLim = get(gca,'XLim')  %# Get the range of the x axis
-                yLim = get(gca,'YLim')  %# Get the range of the y axis
-                text(min(xLim), median(yLim),descrm)
-
-                axes(h2.axbp);  grid off  
-                xLim = get(gca,'XLim')  %# Get the range of the x axis
-                yLim = get(gca,'YLim')  %# Get the range of the y axis
-                text(min(xLim), median(yLim),descrp);
-                
+        plotbode();   
       endif
     endif
         
@@ -216,12 +166,7 @@ function update_plot (init = false)
 
           if (isaxes(h2.axrl) == 1)
             axes(h2.axrl);
-            rlocus(h1.G);
-            e = eig(h1.G);
-            ec = eig(h1.C*h1.G/(1+h1.C*h1.G));
-            eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-            hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6); 
-            hold off;
+            plotrlocus();
           endif
           if (isaxes(h2.axny) == 1)
             axes(h2.axny);
@@ -229,7 +174,7 @@ function update_plot (init = false)
           endif
           if (isaxes(h2.axbm) == 1)
             axes(h2.axbm);
-            bode (h1.G, 'sisotool'); 
+            plotbode();
           endif
             axes(h1.ax1);
             step(feedback(h1.C*h1.G)); 
@@ -246,76 +191,21 @@ function update_plot (init = false)
       step(feedback(h1.C*h1.G)); 
       
       axes(h2.axrl);
-      rlocus(h1.G);
-      e = eig(h1.G);
-      ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
-      eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-      hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-      hold off;
+      plotrlocus()
 
       axes(h2.axbm);
-              bode (h1.G, 'sisotool'); 
-              [MAG, PHA, W] = bode (h1.G); 
-              MAG = mag2db(MAG);
-
-              [olpol, olzer, k,~] = getZP (h1.G);
-              poles(1,:) = real(olpol)';
-              poles(2,:) = imag(olpol)';
-
-              zeros(1,:) = real(olzer)';
-              zeros(2,:) = imag(olzer)';
-
-              wparray = sqrt(poles(1,:).*poles(1,:) + poles(2,:).*poles(2,:));
-              wzarray = sqrt(zeros(1,:).*zeros(1,:) + zeros(2,:).*zeros(2,:));
-
-              if (length(wparray) > 0)
-                for i=1:length(wparray)
-                  idxp(i) = find(W <= wparray(i), 1, 'last');      
-                endfor
-                axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
-                axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "markersize", 8, "linewidth", 4); hold off;
-              endif
-
-              if (length(wzarray) > 0)
-                for i=1:length(wzarray)
-                  idxz(i) = find(W <= wzarray(i), 1, 'last');      
-                endfor
-                axes(h2.axbm ); hold on; plot(W(idxz), MAG(idxz), 'o', "markersize", 8, "linewidth", 4);  hold off;
-                axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "markersize", 8, "linewidth", 4); hold off;
-              endif
-
-                [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
-
-                Gm = round(Gm*10)/10
-                Pm = round(Pm*10)/10
-                Wgm = round(Wgm*10)/10
-                Wpm = round(Wpm*10)/10
-
-                descrm = {strcat('G.M:  ',num2str(Gm)) ; 
-                                strcat('Freq:  ', num2str(Wgm))};
-                                        
-                descrp = {strcat('P.M:  ',num2str(Pm)) ; 
-                                strcat('Freq:  ', num2str(Wpm))};     
-                    
-                axes(h2.axbm) ;  grid off
-                xLim = get(gca,'XLim')  %# Get the range of the x axis
-                yLim = get(gca,'YLim')  %# Get the range of the y axis
-                text(min(xLim), median(yLim),descrm)
-
-                axes(h2.axbp);  grid off  
-                xLim = get(gca,'XLim')  %# Get the range of the x axis
-                yLim = get(gca,'YLim')  %# Get the range of the y axis
-                text(min(xLim), median(yLim),descrp);
-
+      plotbode();
+      
       set (h1.radio_bode, "value", 1);
       set (h1.radio_locus, "value", 1);
       
     endif
     
-    plotmagent();
+    plotrlocus();
 endfunction
 
 function down_fig(hsrc, evt)
+  disp('DEG: down_fig');
   global h1 h2
   plotcleig = 0;
   
@@ -343,7 +233,8 @@ function down_fig(hsrc, evt)
   endif
     
   ## ADDING action
-  if (gca == h2.axrl && get(h1.radio_add, "value"))   
+  if (gca == h2.axrl && get(h1.radio_add, "value")) 
+    disp('DEG: down_fig: ADDING');
     switch ( get (h1.editor_list, "Value") )   
       case {2} ## Add 'x' Real Pole
         plotcleig = 1;                  
@@ -381,15 +272,7 @@ function down_fig(hsrc, evt)
       case {9} ##  Add Lag
       case {10} ##  Add Notch
     endswitch
-    
-    if (plotcleig) % delete later: *0
-      e = eig(h1.G);
-      ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
-      eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-      hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-      hold off;
-    endif
-    
+       
     if (isaxes(h2.axny) == 1)
       axes(h2.axny);
       nyquist(h1.G);
@@ -408,13 +291,13 @@ function release_click (hsrc, evt)
 ##
 ## This function controls the action when the mouse is release.
 ## The action depends on the Roots Editor Action: ADJUST, DELETE OR DELETE
-
+  disp('DEG: release_click');
   global h1 h2
   axes(h2.axrl); 
   c = get (gca, "currentpoint")([1;3]); 
 
   if ( get(h1.radio_delete, "value") ) ## DELETE
-    
+    disp('DEG: release_click: DELETE');
     h1.C
     [olpol, olzer,k,~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
@@ -452,7 +335,7 @@ function release_click (hsrc, evt)
    endif
    
   if ( get(h1.radio_dragging, "value") ) ## DRAGGING
-    
+    disp('DEG: release_click: DRAGGING');
     [olpol, olzer, k, ~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
     poles(2,:) = [imag(olpol)' imag(olzer)'];
@@ -478,7 +361,7 @@ function release_click (hsrc, evt)
 
    endif
        
-  plotmagent();
+  plotrlocus();
   
 endfunction
 
@@ -524,28 +407,17 @@ function slider_adjustgain(hsrc, evt)
   
   h1.C = zpk(z,p,k);
   
-##  axes(h2.axrl); 
-##  [~, ~, istf] = getZP (h1.C);
-##  if (istf)
-##    rlocus(h1.G*h1.C);
-##  else
-##    rlocus(h1.G);
-##  endif
+  plotrlocus();
   
-  plotmagent();
-   
-  plotcleig = 1;
-  if (plotcleig) % delete later: *0
-    e = eig(h1.G*h1.C);
-    ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
-    eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-    hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-    hold off;
+  if (isaxes(h2.axbm) == 1)
+    axes(h2.axbm);
+    plotbode();
   endif
-      
+   
 endfunction
 
-function plotmagent()
+function plotrlocus()
+  disp('DEG: plotrlocus');
   global h1 h2
   
   [olpol, olzer, ~] = getZP (h1.C);
@@ -559,9 +431,75 @@ function plotmagent()
     hold on; plot (real(olzer), imag(olzer), "o", "markersize", 8, "color", "magent", "linewidth", 2); hold off;
   endif
   
+  e = eig(h1.G);
+  ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
+  eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
+  X = real(eigencl);
+  Y = imag(eigencl);
+  hold on; plot(X,Y,"*", "color", "m", "markersize", 8, "linewidth", 6);
+  hold off;
+  xlim auto
+   
   axes(h1.ax1);
   step(feedback(h1.C*h1.G)); 
   axes(h2.axrl);
+endfunction
+
+function plotbode()
+  disp('DEG: plotbode');
+  global h1 h2
+  bode (h1.G, 'sisotool'); 
+  [MAG, PHA, W] = bode (h1.G); 
+  MAG = mag2db(MAG);
+
+  [olpol, olzer, k,~] = getZP (h1.G);
+  poles(1,:) = real(olpol)';
+  poles(2,:) = imag(olpol)';
+
+  zeros(1,:) = real(olzer)';
+  zeros(2,:) = imag(olzer)';
+
+  wparray = sqrt(poles(1,:).*poles(1,:) + poles(2,:).*poles(2,:));
+  wzarray = sqrt(zeros(1,:).*zeros(1,:) + zeros(2,:).*zeros(2,:));
+
+  if (length(wparray) > 0)
+    for i=1:length(wparray)
+      idxp(i) = find(W <= wparray(i), 1, 'last');      
+    endfor
+    axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "color", "r", "markersize", 8, "linewidth", 4); hold off;
+    axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "color", "r","markersize", 8, "linewidth", 4); hold off;
+  endif
+
+  if (length(wzarray) > 0)
+    for i=1:length(wzarray)
+      idxz(i) = find(W <= wzarray(i), 1, 'last');      
+    endfor
+    axes(h2.axbm ); hold on; plot(W(idxz), MAG(idxz), 'o', "color", "g", "markersize", 8, "linewidth", 4);  hold off;
+    axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "color", "g", "markersize", 8, "linewidth", 4); hold off;
+  endif
+
+    [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
+
+    Gm = round(Gm*10)/10;
+    Pm = round(Pm*10)/10;
+    Wgm = round(Wgm*10)/10;
+    Wpm = round(Wpm*10)/10;
+
+    descrm = {strcat('G.M:  ',num2str(Gm)) ; 
+                    strcat('Freq:  ', num2str(Wgm))};
+                            
+    descrp = {strcat('P.M:  ',num2str(Pm)) ; 
+                    strcat('Freq:  ', num2str(Wpm))};     
+        
+    axes(h2.axbm) ;  grid off
+    xLim = get(gca,'XLim');  %# Get the range of the x axis
+    yLim = get(gca,'YLim');  %# Get the range of the y axis
+    text(min(xLim), median(yLim),descrm)
+
+    axes(h2.axbp);  grid off  
+    xLim = get(gca,'XLim');  %# Get the range of the x axis
+    yLim = get(gca,'YLim');  %# Get the range of the y axis
+    text(min(xLim), median(yLim),descrp);
 endfunction
 
 
