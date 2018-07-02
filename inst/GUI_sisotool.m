@@ -15,11 +15,15 @@ global h1 h2
 
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
-h1.C = zpk([],[],1);  # Compensator
+##h1.C = zpk([],[],1);  # Compensator
+Kp = 300; Kd = 10;
+h1.C = pid(Kp,0,Kd)
 
 % Initial Plant (Only for test)
-h1.G = tf([2 5 1],[1 2 3]);
+##h1.G = tf([2 5 1],[1 2 3]);
 ##h1.G = zpk([], -30, 100);
+s = tf('s');
+h1.G = 1/(s^2 + 10*s + 20);
 
 % Creating Figures (Main GUI and Diagrams) 
 fig2 = figure;
@@ -81,14 +85,21 @@ uimenu (add_menu2, 'label', "Notch",                     'callback', 'call_pendi
 controller_menu2 = uimenu(fig2, 'label', '&Controller');
 uimenu(controller_menu2, 'label', 'Save', 'callback', 'call_save_controlller');
 
+# 
+c = uicontextmenu (fig2);
 
+% create menus in the context menu
+h2.m1 = uimenu ("parent",c,"label","Edit Compensantor ... ","callback",'call_menuedit');
+
+% set the context menu for the figure
+set (fig2, "uicontextmenu", c);
 
 %%%%%%%
 
 function update_plot (init = false)
   disp('DEG: update_plot');
     global h1 h2
-      
+
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
     set(0, 'currentfigure', 1); 
@@ -579,6 +590,13 @@ function call_save_controlller(hsrc, evt)
   save controller.mat C;
 endfunction
 
+function call_menuedit(hsrc, evt)
+  global h3
+  
+  set(3, 'Visible', 'on');
+
+endfunction
+
 function call_pendig(hsrc, evt)
   disp('Pending Function');
 endfunction
@@ -697,4 +715,6 @@ set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)
 guidata (fig2, h2)
 update_plot (true);
+
+editcontroller
 
