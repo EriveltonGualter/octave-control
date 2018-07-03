@@ -63,35 +63,35 @@ function [mag_r, pha_r, w_r] = bode (varargin)
     print_usage ();
   endif
 
-  [H, w, sty, leg] = __frequency_response__ ("bode", varargin, nargout);
-  
+  if length(varargin) > 1
+    if strcmpi(varargin(1,2), 'sisotool')
+        global h1 h2
+        ax1 = h2.axbm; 
+        ax2 = h2.axbp;
+        [H, w, sty, leg] = __frequency_response__ ("bode", varargin(1:end-1), nargout);
+    else                                          # Normal plot
+        ax1 = subplot(2,1,1);   
+        ax2 = subplot(2,1,2);
+        [H, w, sty, leg] = __frequency_response__ ("bode", varargin, nargout);
+    endif
+  else                                            # Normal plot
+     [H, w, sty, leg] = __frequency_response__ ("bode", varargin, nargout);
+  endif
+    
   H = cellfun (@reshape, H, {[]}, {1}, "uniformoutput", false);
   mag = cellfun (@abs, H, "uniformoutput", false);
   pha = cellfun (@(H) unwrap (arg (H)) * 180 / pi, H, "uniformoutput", false);
 
   if (! nargout)
+     if length(varargin) < 1
+        ax1 = subplot(2,1,1);   
+        ax2 = subplot(2,1,2);
+     endif
     mag_db = cellfun (@mag2db, mag, "uniformoutput", false);
 
     mag_args = horzcat (cellfun (@horzcat, w, mag_db, sty, "uniformoutput", false){:});
     pha_args = horzcat (cellfun (@horzcat, w, pha, sty, "uniformoutput", false){:});
-    
-    if length(varargin) > 1
-      if strcmpi(varargin(1,2), 'sisotool')
-##          global axbm axbp
-##          ax1 = axbm; 
-##          ax2 = axbp;
-          global h1 h2
-          ax1 = h2.axbm; 
-          ax2 = h2.axbp;
-      else                                          # Normal plot
-          ax1 = subplot(2,1,1);   
-          ax2 = subplot(2,1,2);
-      endif
-    else                                            # Normal plot
-       ax1 = subplot(2,1,1);
-       ax2 = subplot(2,1,2);
-    endif
-    
+        
     semilogx (ax1, mag_args{:}, "linewidth", 2); 
     axis ("tight")
     ylim (__axis_margin__ (ylim))

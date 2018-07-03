@@ -8,6 +8,7 @@ graphics_toolkit qt
 ## Delete it later (Only for debug) -------------------------------------------------------------------------------
 close all 
 clear all
+clc
 ## -------------------------------------------------------------------------------------------------------------------------------
 
 ## For now, I am using global variables. It will be modified
@@ -96,10 +97,14 @@ set (fig2, "uicontextmenu", c);
 
 %%%%%%%
 
-function update_plot (init = false)
+function update_plot (init)
   disp('DEG: update_plot');
     global h1 h2
 
+    if (init == 1)
+      set (h1.radio_bode, "value", 1);
+      set (h1.radio_locus, "value", 1);
+    endif
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
     set(0, 'currentfigure', 1); 
@@ -126,6 +131,7 @@ function update_plot (init = false)
         
       case {[ 1 1 1]}
         h2.axrl    = subplot(2,2,1);
+        h2.axrl    = subplot(2,2,1);
         h2.axny  = subplot(2,2,3);
         h2.axbm = subplot(2,2,2);
         h2.axbp  = subplot(2,2,4);
@@ -135,11 +141,12 @@ function update_plot (init = false)
     if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
       if (isaxes(h2.axrl) == 1)   
         axes(h2.axrl);
-        e = eig(h1.G);
-        ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
-        eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-        hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-        hold off;
+        plotrlocus();
+##        e = eig(h1.G);
+##        ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
+##        eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
+##        hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
+##        hold off;
       endif
       if (isaxes(h2.axny) == 1)
         axes(h2.axny);
@@ -196,23 +203,24 @@ function update_plot (init = false)
 
     endswitch
 
-    ## Initial Plot (IT WILL BE CHANGED)
-    if (init)
-      axes(h1.ax1);
-      step(feedback(h1.C*h1.G)); 
-      
-      axes(h2.axrl);
-      plotrlocus()
-
-      axes(h2.axbm);
-      plotbode();
-      
-      set (h1.radio_bode, "value", 1);
-      set (h1.radio_locus, "value", 1);
-      
-    endif
+##    ## Initial Plot (IT WILL BE CHANGED)
+##    if (init == 1)
+##      disp('TRUE')
+##      axes(h1.ax1);
+##      step(feedback(h1.C*h1.G)); 
+##      
+##      axes(h2.axrl);
+##      plotrlocus()
+##
+##      axes(h2.axbm);
+##      plotbode();
+##      
+##      set (h1.radio_bode, "value", 1);
+##      set (h1.radio_locus, "value", 1);
+##      
+##    endif
     
-    plotrlocus();
+##    plotrlocus();
 endfunction
 
 function down_fig(hsrc, evt)
@@ -459,6 +467,7 @@ endfunction
 function plotbode()
   disp('DEG: plotbode');
   global h1 h2
+
   bode (h1.G, 'sisotool'); 
   [MAG, PHA, W] = bode (h1.G); 
   MAG = mag2db(MAG);
@@ -477,8 +486,8 @@ function plotbode()
     for i=1:length(wparray)
       idxp(i) = find(W <= wparray(i), 1, 'last');      
     endfor
-    axes(h2.axbm ); hold on; plot(W(idxp), MAG(idxp), 'x', "color", "r", "markersize", 8, "linewidth", 4); hold off;
-    axes(h2.axbp ); hold on; plot(W(idxp), PHA(idxp), 'x', "color", "r","markersize", 8, "linewidth", 4); hold off;
+    axes(h2.axbm); hold on; plot(W(idxp), MAG(idxp), 'x', "color", "r", "markersize", 8, "linewidth", 4); hold off;
+    axes(h2.axbp); hold on; plot(W(idxp), PHA(idxp), 'x', "color", "r","markersize", 8, "linewidth", 4); hold off;
   endif
 
   if (length(wzarray) > 0)
@@ -489,28 +498,28 @@ function plotbode()
     axes(h2.axbp ); hold on; plot(W(idxz), PHA(idxz), 'o', "color", "g", "markersize", 8, "linewidth", 4); hold off;
   endif
 
-    [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
+  [Gm,Pm,Wgm,Wpm] = margin(h1.G) ;
 
-    Gm = round(Gm*10)/10;
-    Pm = round(Pm*10)/10;
-    Wgm = round(Wgm*10)/10;
-    Wpm = round(Wpm*10)/10;
+  Gm = round(Gm*10)/10;
+  Pm = round(Pm*10)/10;
+  Wgm = round(Wgm*10)/10;
+  Wpm = round(Wpm*10)/10;
 
-    descrm = {strcat('G.M:  ',num2str(Gm)) ; 
-                    strcat('Freq:  ', num2str(Wgm))};
-                            
-    descrp = {strcat('P.M:  ',num2str(Pm)) ; 
-                    strcat('Freq:  ', num2str(Wpm))};     
-        
-    axes(h2.axbm) ;  grid off
-    xLim = get(gca,'XLim');  %# Get the range of the x axis
-    yLim = get(gca,'YLim');  %# Get the range of the y axis
-    text(min(xLim), median(yLim),descrm)
+  descrm = {strcat('G.M:  ',num2str(Gm)) ; 
+  strcat('Freq:  ', num2str(Wgm))};
 
-    axes(h2.axbp);  grid off  
-    xLim = get(gca,'XLim');  %# Get the range of the x axis
-    yLim = get(gca,'YLim');  %# Get the range of the y axis
-    text(min(xLim), median(yLim),descrp);
+  descrp = {strcat('P.M:  ',num2str(Pm)) ; 
+  strcat('Freq:  ', num2str(Wpm))};     
+
+  axes(h2.axbm) ;  grid off
+  xLim = get(gca,'XLim');  %# Get the range of the x axis
+  yLim = get(gca,'YLim');  %# Get the range of the y axis
+  text(min(xLim), median(yLim),descrm)
+
+  axes(h2.axbp);  grid off  
+  xLim = get(gca,'XLim');  %# Get the range of the x axis
+  yLim = get(gca,'YLim');  %# Get the range of the y axis
+  text(min(xLim), median(yLim),descrp);
 endfunction
 
 

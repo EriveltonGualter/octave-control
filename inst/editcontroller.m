@@ -14,8 +14,8 @@ global h3
 h3.C = h1.C;
 ##h1.G = zpk([], -30, 100);
 ##h3.C = zpk([1],[1 -2],1);  # Compensator
-##s = tf('s');
-##h3.C = 50*(s+3) / (s^ 3-s^ 2+11*s-51);
+s = tf('s');
+h3.C = 50*(s+3) / (s^ 3-s^ 2+11*s-51);
 
 h3.zpk_idx = [];
 h3.zpk = zeros(1, 10);
@@ -47,7 +47,6 @@ function call_select(obj)
       case {2}
         disp("F");  
   endswitch
-
 endfunction
 
 function dynamics(obj, C)
@@ -93,14 +92,13 @@ function dynamics(obj, C)
   
   endfor
   
-  
   p3 = uipanel ("title", "Edit Select Dynamics", "position", [.52 .05 .43 .7]);
 
 endfunction
 
 function plot_edit_dynamics()
   global h3
-  
+  set(0, 'currentfigure', 3); 
   p3 = uipanel ("title", "Edit Select Dynamics", "position", [.52 .05 .43 .7]);
   
   [olpol, olzer, ~, flag] = getZP (h3.C);
@@ -131,7 +129,6 @@ function plot_edit_dynamics()
      set(h3.zpk(i), "Value", 0);
    endif
   endfor
-
 endfunction
 
 function [olpol, olzer, k, flag] = getZP (sys)
@@ -204,19 +201,27 @@ h3.enter_plant = uicontrol ("style", "edit",
  
 c3 = uicontextmenu (fig3);
 
-h3.m1 = uimenu ("parent",c3, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
-h3.m2 = uimenu ("parent",c3, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
-h3.m3 = uimenu ("parent",c3, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
-h3.m4 = uimenu ("parent",c3, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
-h3.m5 = uimenu ("parent",c3, 'label', "Integrator",               'callback', 'call_pendig');
-h3.m6 = uimenu ("parent",c3, 'label', "Differentiator",          'callback', 'call_pendig');
-h3.m7 = uimenu ("parent",c3, 'label',  "Lead",                      'callback', 'call_pendig');
-h3.m8 = uimenu ("parent",c3, 'label', "Lag",                         'callback', 'call_pendig');
-h3.m9 = uimenu ("parent",c3, 'label', "Notch",                     'callback', 'call_pendig');
+h3.m1 = uimenu ("parent",c3, 'label', "'x' Real Pole");
+h3.m2 = uimenu ("parent",c3, 'label',  "'xx' Complex Pole");
+h3.m3 = uimenu ("parent",c3, 'label',  "'o' Real Zero");
+h3.m4 = uimenu ("parent",c3, 'label',  "'oo' Complex Zero");
+h3.m5 = uimenu ("parent",c3, 'label', "Integrator");
+h3.m6 = uimenu ("parent",c3, 'label', "Differentiator");
+h3.m7 = uimenu ("parent",c3, 'label',  "Lead");
+h3.m8 = uimenu ("parent",c3, 'label', "Lag");
+h3.m9 = uimenu ("parent",c3, 'label', "Notch");
+##h3.m1 = uimenu ("parent",c3, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
+##h3.m2 = uimenu ("parent",c3, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
+##h3.m3 = uimenu ("parent",c3, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
+##h3.m4 = uimenu ("parent",c3, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
+##h3.m5 = uimenu ("parent",c3, 'label', "Integrator",               'callback', 'call_pendig');
+##h3.m6 = uimenu ("parent",c3, 'label', "Differentiator",          'callback', 'call_pendig');
+##h3.m7 = uimenu ("parent",c3, 'label',  "Lead",                      'callback', 'call_pendig');
+##h3.m8 = uimenu ("parent",c3, 'label', "Lag",                         'callback', 'call_pendig');
+##h3.m9 = uimenu ("parent",c3, 'label', "Notch",                     'callback', 'call_pendig');
 
 % set the context menu for the figure
 set (fig3, "uicontextmenu", c3);
-
 
 set (fig3, "color", get(0, "defaultuicontrolbackgroundcolor"))
 set(fig3, 'Visible', 'off');
