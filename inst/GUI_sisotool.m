@@ -17,8 +17,11 @@ global h1 h2
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
 ##h1.C = zpk([],[],1);  # Compensator
-Kp = 300; Kd = 10;
-h1.C = pid(Kp,0,Kd)
+##Kp = 300; Kd = 10;
+##h1.C = pid(Kp,0,Kd);
+s = tf('s');
+h1.C = 50*(s+3)*(s^2+5.5*s+10) / (s^ 3-s^ 2+11*s-51);
+h1.F = zpk([],[],1); 
 
 % Initial Plant (Only for test)
 ##h1.G = tf([2 5 1],[1 2 3]);
@@ -27,23 +30,26 @@ s = tf('s');
 h1.G = 1/(s^2 + 10*s + 20);
 
 % Creating Figures (Main GUI and Diagrams) 
+fig1 = figure;
+h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
+set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
+
 fig2 = figure;
 h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
 h2.axbm = subplot(2,2,2);       % Bode Margin Axes
 h2.axbp  = subplot(2,2,4);       % Bode Phase Axes
 h2.axny  = subplot(2,2,2);       % Nyquist Axes
 set(fig2, 'Name','Diagrams','NumberTitle','off');
-##position = get (fig2, "position");
-##set (fig2, "position", position + [-50 -50 +250 +250]) ;
 
-fig1 = figure;
-h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
-set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
+fig3 = figure;
+set (fig3, 'Name','Edit Controller','NumberTitle','off');
+set(3, 'Visible', 'off');
 
 
 ## MENUS
 
 # Fig1 
+set(0, 'currentfigure', fig1); 
 view_menu1 = uimenu (fig1, 'label', '&View');
 
 uimenu (view_menu1, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
@@ -66,6 +72,7 @@ uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
 
 
 # Fig2
+set(0, 'currentfigure', fig2); 
 view_menu2 = uimenu (fig2, 'label', '&View');
 
 uimenu (view_menu2, 'label', 'Root Locus',       'accelerator', 'r', 'callback', 'call_view_rootlocus');
@@ -98,7 +105,7 @@ set (fig2, "uicontextmenu", c);
 %%%%%%%
 
 function update_plot (init)
-  disp('DEG: update_plot');
+  ## disp('DEG: update_plot');
     global h1 h2
 
     if (init == 1)
@@ -107,7 +114,7 @@ function update_plot (init)
     endif
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
-    set(0, 'currentfigure', 1); 
+    set(0, 'currentfigure', 2); 
     switch (diag)
       case {[ 1 0 0]}
         h2.axrl    = subplot(2,2,[1 2 3 4]); 
@@ -139,23 +146,7 @@ function update_plot (init)
         
     ## Plot diagrams if any of the radio buttons is pressed 
     if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
-      if (isaxes(h2.axrl) == 1)   
-        axes(h2.axrl);
-        plotrlocus();
-##        e = eig(h1.G);
-##        ec = eig(h1.C*h1.G/(h1.H+h1.C*h1.G));
-##        eigencl = ec(~any(abs(bsxfun(@minus, ec(:).', e(:))) < 1e-6, 1));
-##        hold on; plot(eigencl,"*", "color", "m", "markersize", 8, "linewidth", 6);
-##        hold off;
-      endif
-      if (isaxes(h2.axny) == 1)
-        axes(h2.axny);
-        nyquist(h1.G);
-      endif
-      if (isaxes(h2.axbm) == 1)
-        axes(h2.axbm);
-        plotbode();   
-      endif
+      plots()
     endif
         
     switch (gcbo)
@@ -181,50 +172,17 @@ function update_plot (init)
           h1.C = zpk([],[],1); 
 
           set(h1.lbl_plant, 'String', 'Transfer function : ... valid ! ...');
-
-          if (isaxes(h2.axrl) == 1)
-            axes(h2.axrl);
-            plotrlocus();
-          endif
-          if (isaxes(h2.axny) == 1)
-            axes(h2.axny);
-            nyquist(h1.G);
-          endif
-          if (isaxes(h2.axbm) == 1)
-            axes(h2.axbm);
-            plotbode();
-          endif
-            axes(h1.ax1);
-            step(feedback(h1.C*h1.G)); 
-            axes(h2.axrl);
+          plots();
         catch
           set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
         end_try_catch
 
     endswitch
 
-##    ## Initial Plot (IT WILL BE CHANGED)
-##    if (init == 1)
-##      disp('TRUE')
-##      axes(h1.ax1);
-##      step(feedback(h1.C*h1.G)); 
-##      
-##      axes(h2.axrl);
-##      plotrlocus()
-##
-##      axes(h2.axbm);
-##      plotbode();
-##      
-##      set (h1.radio_bode, "value", 1);
-##      set (h1.radio_locus, "value", 1);
-##      
-##    endif
-    
-##    plotrlocus();
 endfunction
 
 function down_fig(hsrc, evt)
-  disp('DEG: down_fig');
+  ## disp('DEG: down_fig');
   global h1 h2
   plotcleig = 0;
   
@@ -253,7 +211,7 @@ function down_fig(hsrc, evt)
     
   ## ADDING action
   if (gca == h2.axrl && get(h1.radio_add, "value")) 
-    disp('DEG: down_fig: ADDING');
+    ## disp('DEG: down_fig: ADDING');
     switch ( get (h1.editor_list, "Value") )   
       case {2} ## Add 'x' Real Pole
         plotcleig = 1;                  
@@ -291,15 +249,9 @@ function down_fig(hsrc, evt)
       case {9} ##  Add Lag
       case {10} ##  Add Notch
     endswitch
-       
-    if (isaxes(h2.axny) == 1)
-      axes(h2.axny);
-      nyquist(h1.G);
-    endif
-      
+             
     set (h1.editor_list, "Value", 1); %% Set none in the list
     set (h1.radio_add, "value", 0);
-
   endif
 
 endfunction
@@ -310,13 +262,13 @@ function release_click (hsrc, evt)
 ##
 ## This function controls the action when the mouse is release.
 ## The action depends on the Roots Editor Action: ADJUST, DELETE OR DELETE
-  disp('DEG: release_click');
+  ## disp('DEG: release_click');
   global h1 h2
   axes(h2.axrl); 
   c = get (gca, "currentpoint")([1;3]); 
 
   if ( get(h1.radio_delete, "value") ) ## DELETE
-    disp('DEG: release_click: DELETE');
+    ## disp('DEG: release_click: DELETE');
     h1.C
     [olpol, olzer,k,~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
@@ -354,7 +306,7 @@ function release_click (hsrc, evt)
    endif
    
   if ( get(h1.radio_dragging, "value") ) ## DRAGGING
-    disp('DEG: release_click: DRAGGING');
+    ## disp('DEG: release_click: DRAGGING');
     [olpol, olzer, k, ~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
     poles(2,:) = [imag(olpol)' imag(olzer)'];
@@ -380,7 +332,7 @@ function release_click (hsrc, evt)
 
    endif
        
-  plotrlocus();
+  plots();
   
 endfunction
 
@@ -425,18 +377,41 @@ function slider_adjustgain(hsrc, evt)
   k = get( h1.slider_gain, "value");
   
   h1.C = zpk(z,p,k);
-  
-  plotrlocus();
+  plots();
+endfunction
+
+function plots()
+  global h1 h2 h3
+  set(0, 'currentfigure', 2); 
+  if (isaxes(h2.axrl) == 1)   
+    axes(h2.axrl);
+    plotrlocus();
+  endif
+
+  if (isaxes(h2.axny) == 1)
+    axes(h2.axny);
+    nyquist(h1.G);
+  endif
   
   if (isaxes(h2.axbm) == 1)
     axes(h2.axbm);
     plotbode();
   endif
-   
+
+  str1 = get(3, "Visible");
+  str2 =  "on";
+  if (strcmp(str1, str2))  
+    dynamics();
+  endif
+  
+  set(0, 'currentfigure', 1); 
+  axes(h1.ax1);
+  step(feedback(h1.C*h1.G)); 
+  axes(h2.axrl);
 endfunction
 
 function plotrlocus()
-  disp('DEG: plotrlocus');
+  ## disp('DEG: plotrlocus');
   global h1 h2
   
   [olpol, olzer, ~] = getZP (h1.C);
@@ -465,7 +440,7 @@ function plotrlocus()
 endfunction
 
 function plotbode()
-  disp('DEG: plotbode');
+  ## disp('DEG: plotbode');
   global h1 h2
 
   bode (h1.G, 'sisotool'); 
@@ -600,10 +575,11 @@ function call_save_controlller(hsrc, evt)
 endfunction
 
 function call_menuedit(hsrc, evt)
-  global h3
+  global h1 h3
   
   set(3, 'Visible', 'on');
-
+  h3.sys = h1.C;
+  dynamics();
 endfunction
 
 function call_pendig(hsrc, evt)
@@ -611,6 +587,7 @@ function call_pendig(hsrc, evt)
 endfunction
 
 ## UI Elements 
+set(0, 'currentfigure', 1); 
 
 ## Push buttons
 h1.btn_savecontroller = uicontrol ("style", "pushbutton",
@@ -726,4 +703,3 @@ guidata (fig2, h2)
 update_plot (true);
 
 editcontroller
-
