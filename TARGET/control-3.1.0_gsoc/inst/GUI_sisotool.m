@@ -16,18 +16,18 @@ global h1 h2
 
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
-##h1.C = zpk([],[],1);  # Compensator
+h1.C = zpk([],[],1);  # Compensator
 ##Kp = 300; Kd = 10;
 ##h1.C = pid(Kp,0,Kd);
-s = tf('s');
-h1.C = 50*(s+3)*(s^2+5.5*s+10) / (s^ 3-s^ 2+11*s-51);
+##s = tf('s');
+##h1.C = 50*(s+3)*(s^2+5.5*s+10) / (s^ 3-s^ 2+11*s-51);
 h1.F = zpk([],[],1); 
 
 % Initial Plant (Only for test)
 ##h1.G = tf([2 5 1],[1 2 3]);
-##h1.G = zpk([], -30, 100);
-s = tf('s');
-h1.G = 1/(s^2 + 10*s + 20);
+h1.G = zpk([], -30, 100);
+##s = tf('s');
+##h1.G = 1/(s^2 + 10*s + 20);
 
 % Creating Figures (Main GUI and Diagrams) 
 fig1 = figure;
@@ -40,6 +40,7 @@ h2.axbm = subplot(2,2,2);       % Bode Margin Axes
 h2.axbp  = subplot(2,2,4);       % Bode Phase Axes
 h2.axny  = subplot(2,2,2);       % Nyquist Axes
 set(fig2, 'Name','Diagrams','NumberTitle','off');
+set(2, 'Visible', 'off');
 
 fig3 = figure;
 set (fig3, 'Name','Edit Controller','NumberTitle','off');
@@ -109,12 +110,19 @@ function update_plot (init)
     global h1 h2
 
     if (init == 1)
-      set (h1.radio_bode, "value", 1);
-      set (h1.radio_locus, "value", 1);
+      set (h1.radio_bode, "value", 0);
+      set (h1.radio_locus, "value", 0);
+      axes(h1.ax1);
+      cla
     endif
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
-    set(0, 'currentfigure', 2); 
+    if sum(diag) == 0
+      set(2, 'Visible', 'off');
+    else
+      set(2, 'Visible', 'on');
+      set(0, 'currentfigure', 2); 
+    endif
     switch (diag)
       case {[ 1 0 0]}
         h2.axrl    = subplot(2,2,[1 2 3 4]); 
@@ -145,7 +153,7 @@ function update_plot (init)
     endswitch
         
     ## Plot diagrams if any of the radio buttons is pressed 
-    if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value') || init)
+    if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value'))
       plots()
     endif
         
@@ -192,6 +200,7 @@ function down_fig(hsrc, evt)
   ## Plot black circle around the closest pole or zero.
   if ( get(h1.radio_dragging, "value") || get(h1.radio_delete, "value")) 
         [olpol, olzer, ~,~] = getZP (h1.C);
+
         poles(1,:) = [real(olpol)' real(olzer)'];
         poles(2,:) = [imag(olpol)' imag(olzer)'];
 
@@ -199,7 +208,8 @@ function down_fig(hsrc, evt)
         [~, idx] = min (hypot (p(1, :), p(2, :)));
                 
         hold on
-        for i=1:length(poles)
+        [~, N] = size(poles);
+        for i=1:N
           if idx == i
             plot (poles(1, idx), poles(2, idx), "o", "markersize", 15, "color", "black", "linewidth", 2); 
           else
@@ -218,10 +228,8 @@ function down_fig(hsrc, evt)
         [olpol, olzer,k,~] = getZP (h1.C);
                 
         olpol = [olpol; c(1)];
-        h1.C = zpk (olzer, olpol',k);
-        
-        disp("add real pole")
-        
+        h1.C = zpk (olzer, olpol',k);        
+                
       case {3} ##  Add 'xx' Complex Pole
         plotcleig = 1;
         [olpol, olzer,k,~] = getZP (h1.C);
@@ -317,12 +325,10 @@ function release_click (hsrc, evt)
         
     if abs(poles(2, idx)) > 0
       idxc = find(poles(2,:) == -1*poles(2, idx), 1, 'last');      
-      disp("imag")
       poles(:, idx) = [c(1); c(2)];
       poles(:, idxc) = [c(1); -c(2)];
     else
       poles(1,idx) = c(1);
-      disp("real")
     endif
     
     olpol = poles(1, 1:length(olpol)) + poles(2, 1:length(olpol))*i;
@@ -626,7 +632,6 @@ h1.radio_bode = uicontrol ("style", "radiobutton",
                                     "units", "normalized",
                                     "string", "Bode",
                                     "callback", @update_plot,
-                                    "value", 0,
                                     "position", [0.05 0.25 0.15 0.04]);
                                     
 h1.radio_locus = uicontrol ("style", "radiobutton",
@@ -639,7 +644,6 @@ h1.radio_nyquist = uicontrol ("style", "radiobutton",
                                     "units", "normalized",
                                     "string", "Nyquist",
                                     "callback", @update_plot,
-                                    "value", 0,
                                    "position", [0.05 0.19 0.15 0.04]);
                             
 h1.radio_dragging = uicontrol ("style", "radiobutton",

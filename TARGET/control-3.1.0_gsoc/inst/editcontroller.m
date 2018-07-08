@@ -222,7 +222,7 @@ function call_update_gain()
 endfunction
 
 function call_update_dynamic()
-  disp('DEB: Update location');
+##  disp('DEB: Update location');
 
   global h1 h2 h3
      
