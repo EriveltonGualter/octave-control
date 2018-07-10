@@ -17,15 +17,12 @@ global h1 h2
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
 h1.C = zpk([],[],1);  # Compensator
-##Kp = 300; Kd = 10;
-##h1.C = pid(Kp,0,Kd);
-##s = tf('s');
-##h1.C = 50*(s+3)*(s^2+5.5*s+10) / (s^ 3-s^ 2+11*s-51);
 h1.F = zpk([],[],1); 
+h1.C = zpk([-2 -20],[0],1000);  # Compensator
 
 % Initial Plant (Only for test)
 ##h1.G = tf([2 5 1],[1 2 3]);
-h1.G = zpk([], -30, 100);
+h1.G = zpk([],[-10 -2] , 0.01);
 ##s = tf('s');
 ##h1.G = 1/(s^2 + 10*s + 20);
 
@@ -70,6 +67,7 @@ uimenu (add_menu1, 'label', "Notch",                     'callback', 'call_pendi
                                 
 controller_menu1 = uimenu(fig1, 'label', '&Controller');
 uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
+uimenu(controller_menu1, 'label', 'Edit Controller ...', 'callback', 'call_menuedit');
 
 
 # Fig2
@@ -93,6 +91,7 @@ uimenu (add_menu2, 'label', "Notch",                     'callback', 'call_pendi
                                 
 controller_menu2 = uimenu(fig2, 'label', '&Controller');
 uimenu(controller_menu2, 'label', 'Save', 'callback', 'call_save_controlller');
+uimenu(controller_menu2, 'label', 'Edit Controller ...', 'callback', 'call_menuedit');
 
 # 
 c = uicontextmenu (fig2);
@@ -113,7 +112,8 @@ function update_plot (init)
       set (h1.radio_bode, "value", 0);
       set (h1.radio_locus, "value", 0);
       axes(h1.ax1);
-      cla
+      
+      plots()
     endif
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
     diag = [get(h1.radio_locus, 'Value') get(h1.radio_bode, 'Value') get(h1.radio_nyquist, 'Value')];
