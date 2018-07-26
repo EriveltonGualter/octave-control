@@ -28,7 +28,7 @@ h1.G = zpk([],[-10 -2] , 0.01);
 
 % Creating Figures (Main GUI and Diagrams) 
 fig1 = figure;
-h1.ax1 = axes ("position", [0.05 0.5 0.9 0.5]);
+h1.ax1 = axes ("position", [0.05 0.5 0.9 0.4]);
 set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
 
 fig2 = figure;
@@ -412,7 +412,7 @@ function plots()
   
   set(0, 'currentfigure', 1); 
   axes(h1.ax1);
-  step(feedback(h1.C*h1.G)); 
+  step(feedback(h1.C*h1.G));  
   axes(h2.axrl);
 endfunction
 
@@ -573,7 +573,6 @@ function call_add_czeros(hsrc, evt)
   set (h1.editor_list, "Value", 5);
 endfunction
 
-
 function call_save_controlller(hsrc, evt)
   global h1 h2
   C = h1.C;
@@ -586,6 +585,23 @@ function call_menuedit(hsrc, evt)
   set(3, 'Visible', 'on');
   h3.sys = h1.C;
   dynamics();
+endfunction
+
+function visibleoff_diagrams();
+  global h1 
+  set(h1.radio_locus, 'Value',0);
+  set(h1.radio_bode, 'Value',0);
+  set(h1.radio_nyquist, 'Value',0);
+  set(2, 'Visible', 'off');
+endfunction
+
+function call_select_mainaxes()
+  global h1
+    
+  switch ( get (h3.select_mainaxes, "Value") )   
+      case {1}
+      case {2}
+  endswitch
 endfunction
 
 function call_pendig(hsrc, evt)
@@ -696,10 +712,19 @@ h1.slider_gain = uicontrol ("style", "slider",
                                    "callback", @slider_adjustgain,
                                  "position", [0.7 0.32 0.25 0.04]); 
 
+h1.select_mainaxes = uicontrol ("style", "popupmenu",
+                                "units", "normalized",
+                                "string", {"Step Response",
+                                           "Control Effort"}, 
+                                 "callback", @call_select_mainaxes,
+                                "position", [0.05 0.93 .3 .05]);
+                                
 ## Calbacks
 set (fig2, "windowbuttondownfcn", @down_fig);
-##set (fig2, "windowbuttonmotionfcn", @update_clgain)
 set (fig2, "windowbuttonupfcn", @release_click)
+set(fig2, 'Visible', 'off');
+set(fig2,'CloseRequestFcn','visibleoff_diagrams');
+set(fig1,'CloseRequestFcn','close all force');
 
 set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)
