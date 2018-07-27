@@ -277,7 +277,6 @@ function release_click (hsrc, evt)
 
   if ( get(h1.radio_delete, "value") ) ## DELETE
     ## disp('DEG: release_click: DELETE');
-    h1.C
     [olpol, olzer,k,~] = getZP (h1.C);
     poles(1,:) = [real(olpol)' real(olzer)'];
     poles(2,:) = [imag(olpol)' imag(olzer)'];
@@ -598,7 +597,7 @@ endfunction
 function call_select_mainaxes()
   global h1
     
-  switch ( get (h3.select_mainaxes, "Value") )   
+  switch ( get (h1.select_mainaxes, "Value") )   
       case {1}
       case {2}
   endswitch

@@ -271,8 +271,158 @@ function call_update_dynamic()
   
   dynamics();
   plots();
-
 endfunction
+
+function add_rpole()
+  global h1 h3
+  
+  [olpol, olzer,k,~] = getZP (h1.C);
+  
+  c = -1;  
+  olpol = [olpol; c(1)];
+  h1.C = zpk (olzer, olpol',k);    
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_cpole()    
+  global h1 h3
+  [olpol, olzer,k,~] = getZP (h1.C);
+  c = [-1 -1];
+  
+  olpol = [olpol; c(1)+i*c(2); c(1)-i*c(2)];
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_rzero()
+  global h1 h3
+  [olpol, olzer,k,~] = getZP (h1.C);
+  c = -1;
+  
+  olzer = [olzer; c(1)];
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_czero()
+  global h1 h3
+  [olpol, olzer,k,~] = getZP (h1.C);
+  c = [-1 -1];
+
+  olzer = [olzer; c(1)+i*c(2); c(1)-i*c(2)];
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_integrator()
+  global h1 h3
+  
+  [olpol, olzer,k,~] = getZP (h1.C);
+  
+  c = 0  
+  olpol = [olpol; c(1)];
+  h1.C = zpk (olzer, olpol',k);    
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_differentiator()
+  global h1 h3
+  [olpol, olzer,k,~] = getZP (h1.C);
+  c = 0;
+  
+  olzer = [olzer; c(1)];
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_pending()
+  disp('Pending feature');
+endfunction
+
+function delete_pz()
+  global h1 h3
+  set(0, 'currentfigure', 3); 
+  
+  [olpol, olzer, k, ~] = getZP (h3.sys);
+  poles(1,:) = [real(olpol)' real(olzer)'];
+  poles(2,:) = [imag(olpol)' imag(olzer)'];
+  
+  np = length(olpol);
+  nz = length(olzer);
+  a = gcbo;
+  N = np+ nz;
+  select_flag = 1;
+  idx = [];
+  for i=1:N
+   if (get(h3.zpk(i), "Value") == 1)
+     idx = i;
+     h3.currentzpk = i;
+     str1 = get(h3.zpk(i), "string");
+     str2 =  "Complex Pole";
+     str3=  "Complex Zero";
+     if (strcmp(str1, str2) || strcmp(str1, str3)) ## Complex
+
+     else ## Real
+     
+     endif
+   else
+     set(h3.zpk(i), "Value", 0);
+   endif
+  endfor
+
+  if abs(poles(2, idx)) > 0
+    idxc = find(poles(2,:) == -1*poles(2, idx), 1, 'last');      
+    poles(:, idx) = [];
+    poles(:, idxc) = [];
+    lastpol = length(olpol);
+    if idx <= length(olpol)
+      olpol = poles(1, 1:lastpol-2) + poles(2, 1:lastpol-2)*i;
+      olzer = poles(1, lastpol-1:end) + poles(2, lastpol-1:end)*i;
+    else
+      olpol = poles(1, 1:lastpol) + poles(2, 1:lastpol)*i;
+      olzer = poles(1, lastpol+1:end) + poles(2, lastpol+1:end)*i;
+    endif
+  else
+    poles(:,idx) = [];
+    lastpol = length(olpol);
+    if idx <= length(olpol)
+      olpol = poles(1, 1:lastpol-1) + poles(2, 1:lastpol-1)*i;
+      olzer = poles(1, lastpol:end) + poles(2, lastpol:end)*i;
+    else
+      olpol = poles(1, 1:lastpol) + poles(2, 1:lastpol)*i;
+      olzer = poles(1, lastpol+1:end) + poles(2, lastpol+1:end)*i;
+    endif
+  endif
+    
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function visibleoff_controller();
+  set(3, 'Visible', 'off');
+endfunction
+
 ## UI Elements 
 
 ##p = uipanel ("title", "Controller Editor", "position", [.05 .8 .7 .1]);
@@ -310,15 +460,18 @@ h3.gain_box = uicontrol ("style", "edit",
  
 c3 = uicontextmenu (fig3);
 
-h3.m1 = uimenu ("parent",c3, 'label', "'x' Real Pole");
-h3.m2 = uimenu ("parent",c3, 'label',  "'xx' Complex Pole");
-h3.m3 = uimenu ("parent",c3, 'label',  "'o' Real Zero");
-h3.m4 = uimenu ("parent",c3, 'label',  "'oo' Complex Zero");
-h3.m5 = uimenu ("parent",c3, 'label', "Integrator");
-h3.m6 = uimenu ("parent",c3, 'label', "Differentiator");
-h3.m7 = uimenu ("parent",c3, 'label',  "Lead");
-h3.m8 = uimenu ("parent",c3, 'label', "Lag");
-h3.m9 = uimenu ("parent",c3, 'label', "Notch");
+h3.menu1 = uimenu ("parent",c3, 'label', "Add Pole/Zero ...");
+h3.menu2 = uimenu ("parent",c3, 'label', "Delete Pole/Zero ...", 'callback','delete_pz');
+
+h3.m1 = uimenu (h3.menu1, 'label', "'x' Real Pole",'callback', 'add_rpole');
+h3.m2 = uimenu (h3.menu1, 'label',  "'xx' Complex Pole",'callback', 'add_cpole');
+h3.m3 = uimenu (h3.menu1, 'label',  "'o' Real Zero",'callback', 'add_rzero');
+h3.m4 = uimenu (h3.menu1, 'label',  "'oo' Complex Zero",'callback', 'add_czero');
+h3.m5 = uimenu (h3.menu1, 'label', "Integrator",'callback', 'add_integrator');
+h3.m6 = uimenu (h3.menu1, 'label', "Differentiator",'callback', 'add_differentiator');
+h3.m7 = uimenu (h3.menu1, 'label',  "Lead",'callback', 'add_pending');
+h3.m8 = uimenu (h3.menu1, 'label', "Lag",'callback', 'add_pending');
+h3.m9 = uimenu (h3.menu1, 'label', "Notch",'callback', 'add_pending');
 ##h3.m1 = uimenu ("parent",c3, 'label', "'x' Real Pole",           'callback', 'call_add_poles');
 ##h3.m2 = uimenu ("parent",c3, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
 ##h3.m3 = uimenu ("parent",c3, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
@@ -332,9 +485,10 @@ h3.m9 = uimenu ("parent",c3, 'label', "Notch");
 % set the context menu for the figure
 set (fig3, "uicontextmenu", c3);
 
-set (fig3, "color", get(0, "defaultuicontrolbackgroundcolor"))
+set(fig3, "color", get(0, "defaultuicontrolbackgroundcolor"))
 set(fig3, 'Visible', 'off');
-
+set(fig3,'CloseRequestFcn','visibleoff_controller');
+ 
 guidata (gcf, h3)
 dynamics(gcf, h3.sys);
 ##call_select (gcf);
