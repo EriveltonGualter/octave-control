@@ -18,7 +18,7 @@ global h1 h2
 h1.H = 1;   # Sensor
 h1.C = zpk([],[],1);  # Compensator
 h1.F = zpk([],[],1); 
-h1.C = zpk([-2 -20],[0],1000);  # Compensator
+h1.C = zpk([-2 -20],[ ],1000);  # Compensator test
 
 % Initial Plant (Only for test)
 ##h1.G = tf([2 5 1],[1 2 3]);
@@ -42,7 +42,6 @@ set(2, 'Visible', 'off');
 fig3 = figure;
 set (fig3, 'Name','Edit Controller','NumberTitle','off');
 set(3, 'Visible', 'off');
-
 
 ## MENUS
 
@@ -68,7 +67,7 @@ uimenu (add_menu1, 'label', "Notch",                     'callback', 'call_pendi
 controller_menu1 = uimenu(fig1, 'label', '&Controller');
 uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
 uimenu(controller_menu1, 'label', 'Edit Controller ...', 'callback', 'call_menuedit');
-
+h1.uimenu_designs = uimenu(controller_menu1, 'label', 'Designs ...');
 
 # Fig2
 set(0, 'currentfigure', fig2); 
@@ -168,8 +167,7 @@ function update_plot (init)
         set (h1.radio_add, "value", 0);
         set (h1.radio_dragging, "value", 0);
       case {h1.btn_savecontroller}
-        C = h1.C;
-        save controller.mat C;
+        call_save_controlller
       case {h1.enter_plant}
         s = tf('s');
         v = get (gcbo, "string");
@@ -410,9 +408,59 @@ function plots()
   endif
   
   set(0, 'currentfigure', 1); 
-  axes(h1.ax1);
-  step(feedback(h1.C*h1.G));  
-  axes(h2.axrl);
+  axes(h1.ax1); cla;
+  
+  if isfield(h1, 'flag_disp_C') == 0 
+    h1.flag_disp_C(1) = 1;
+    ii = 1;
+  else
+    ii = find(h1.flag_disp_C == 1) ;
+  endif
+  
+  flag = 1;
+  flag_legend = 0;
+  for i=ii'
+      if isfield(h1,'list_num')
+        C = tf(h1.list_num{i,:}, h1.list_den{i,:});
+      else
+        C = h1.C;
+      end
+      u = C/(1+C*h1.G*h1.H);
+      switch ( get (h1.select_mainaxes, "Value") )   
+          case {1}
+            hold on;
+            step(feedback(C*h1.G));
+            flag_legend = 1;
+          case {2}
+            [olpol, olzer, ~,~] = getZP (u);
+            if length(olzer) < length(olpol)
+              hold on; 
+              impulse(feedback(h1.G*h1.C,h1.H));
+              flag_legend = 1;
+            endif
+            title('Impulse Response');
+          case {3}
+            [olpol, olzer, ~,~] = getZP (u);
+            if length(olzer) <= length(olpol)
+              hold on; 
+              step(u);
+              flag_legend = 1;
+            endif
+            title('Control Effort');
+      endswitch
+      
+      name = strcat('Design', num2str(i));
+      if flag
+        str = {name};
+        flag = 0;
+      else
+        str = {str{:,:}, name};
+      endif    
+  endfor
+  hold off;
+  if flag_legend
+    legend(str(:));
+  endif
 endfunction
 
 function plotrlocus()
@@ -572,10 +620,45 @@ function call_add_czeros(hsrc, evt)
   set (h1.editor_list, "Value", 5);
 endfunction
 
-function call_save_controlller(hsrc, evt)
+function call_save_controlller( )
+##  disp('DEG: save controller')
   global h1 h2
+  
+  [num, den] = tfdata (h1.C, "vector");
+    
+  if isfield(h1, 'list_num')
+    [n, ~] = size(h1.list_num);
+    h1.list_num{n+1,:} = num; 
+    h1.list_den{n+1,:} = den;
+    h1.list_c(n+1) = uimenu (h1.uimenu_designs, 'label',  strcat("Desing ",num2str(n+1)),'callback','call_flagdesign');
+  else
+    h1.list_num = {num}; 
+    h1.list_den = {den};
+    h1.list_c(1) = uimenu (h1.uimenu_designs, 'label', "Desing1",'callback','call_flagdesign');
+    h1.flag_disp_C =   1;
+  endif
+    
   C = h1.C;
   save controller.mat C;
+endfunction
+
+function call_flagdesign
+  global h1;
+  a = gcbo;
+  [n, ~] = size(h1.list_num);
+  
+  h1.flag_disp_C =   h1.flag_disp_C + zeros(n,1);
+  
+  for i=1:n
+    if (a == h1.list_c(i))
+      if (h1.flag_disp_C(i) ~= 0)
+        h1.flag_disp_C(i) = 0;
+      else
+        h1.flag_disp_C(i) = 1;
+      endif
+    endif
+  endfor
+  plots();
 endfunction
 
 function call_menuedit(hsrc, evt)
@@ -592,15 +675,6 @@ function visibleoff_diagrams();
   set(h1.radio_bode, 'Value',0);
   set(h1.radio_nyquist, 'Value',0);
   set(2, 'Visible', 'off');
-endfunction
-
-function call_select_mainaxes()
-  global h1
-    
-  switch ( get (h1.select_mainaxes, "Value") )   
-      case {1}
-      case {2}
-  endswitch
 endfunction
 
 function call_pendig(hsrc, evt)
@@ -714,8 +788,9 @@ h1.slider_gain = uicontrol ("style", "slider",
 h1.select_mainaxes = uicontrol ("style", "popupmenu",
                                 "units", "normalized",
                                 "string", {"Step Response",
+                                           "Impulse Response",
                                            "Control Effort"}, 
-                                 "callback", @call_select_mainaxes,
+                                 "callback", @plots,
                                 "position", [0.05 0.93 .3 .05]);
                                 
 ## Calbacks
