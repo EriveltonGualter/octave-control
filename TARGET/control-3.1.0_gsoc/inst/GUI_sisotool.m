@@ -125,23 +125,29 @@ function update_plot (init)
     switch (diag)
       case {[ 1 0 0]}
         h2.axrl    = subplot(2,2,[1 2 3 4]); 
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
       case {[ 0 1 0]}
         h2.axbm = subplot(2,2,[1 2]);
         h2.axbp  = subplot(2,2,[3 4]); 
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
       case {[ 0 0 1]}
         h2.axny   = subplot(2,2,[1 2 3 4]);
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
    
       case {[ 0 1 1]}
         h2.axny  = subplot(2,2,[1 3]); 
         h2.axbm = subplot(2,2,2);
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
       case {[ 1 0 1]}
         h2.axrl    = subplot(2,1,1); 
         h2.axny  = subplot(2,1,2); 
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
       case {[ 1 1 0]}
         h2.axrl    = subplot(2,2,[1 3]);
         h2.axbm = subplot(2,2,2); 
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
         
       case {[ 1 1 1]}
         h2.axrl    = subplot(2,2,1);
@@ -149,6 +155,7 @@ function update_plot (init)
         h2.axny  = subplot(2,2,3);
         h2.axbm = subplot(2,2,2);
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
     endswitch
         
     ## Plot diagrams if any of the radio buttons is pressed 
@@ -486,6 +493,25 @@ function plotrlocus()
   hold on; plot(X,Y,"*", "color", "m", "markersize", 8, "linewidth", 6);
   hold off;
   xlim auto
+
+  %%%%%%%%%%%%%%%%%%%  icons %%%%%%%%%%%%%%%%%%%
+  % create empty toolbar
+  if isfield(h2, 'brp') == 0
+    t = uitoolbar (2);
+    iconrp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RPole.png'));
+    iconrz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RZero.png'));
+    iconcp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CPole.png'));
+    iconcz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CZero.png'));
+    iconer=im2double(imread('/home/erivelton/octave/control-3.1.0/images/Clear_16x16.png'));
+
+    % add pushtool button to toolbar
+    h2.brp = uipushtool (t, "cdata", iconrp,'ClickedCallback', 'call_add_poles');
+    h2.brz = uipushtool (t, "cdata", iconrz,'ClickedCallback', 'call_add_zeros');
+    h2.bcp = uipushtool (t, "cdata", iconcp,'ClickedCallback', 'call_add_zeros');
+    h2.bcr = uipushtool (t, "cdata", iconcz,'ClickedCallback', 'call_add_czeros');
+    h2.ber = uipushtool (t, "cdata", iconer,'ClickedCallback', 'call_delete');
+  endif
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
   axes(h1.ax1);
   step(feedback(h1.C*h1.G)); 
@@ -618,6 +644,11 @@ function call_add_czeros(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 5);
+endfunction
+
+function call_delete(hsrc, evt) 
+  global h1 h2
+  set(h1.radio_delete , 'Value', 1);
 endfunction
 
 function call_save_controlller( )
