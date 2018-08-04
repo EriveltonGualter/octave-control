@@ -16,6 +16,7 @@ global h1 h2
 
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
+h1.H = 1;   # Sensor
 h1.C = zpk([],[],1);  # Compensator
 h1.F = zpk([],[],1); 
 h1.C = zpk([-2 -20],[ ],1000);  # Compensator test
@@ -315,6 +316,7 @@ function release_click (hsrc, evt)
     endif
         
     h1.C = zpk (olzer, olpol',k);
+    set(h1.radio_delete, "value", 0);
    endif
    
   if ( get(h1.radio_dragging, "value") ) ## DRAGGING
@@ -507,7 +509,7 @@ function plotrlocus()
     % add pushtool button to toolbar
     h2.brp = uipushtool (t, "cdata", iconrp,'ClickedCallback', 'call_add_poles');
     h2.brz = uipushtool (t, "cdata", iconrz,'ClickedCallback', 'call_add_zeros');
-    h2.bcp = uipushtool (t, "cdata", iconcp,'ClickedCallback', 'call_add_zeros');
+    h2.bcp = uipushtool (t, "cdata", iconcp,'ClickedCallback', 'call_add_cpoles');
     h2.bcr = uipushtool (t, "cdata", iconcz,'ClickedCallback', 'call_add_czeros');
     h2.ber = uipushtool (t, "cdata", iconer,'ClickedCallback', 'call_delete');
   endif
@@ -623,6 +625,7 @@ function call_add_poles(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 2);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add complex poles
@@ -630,6 +633,7 @@ function call_add_cpoles(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 3);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add zeros
@@ -637,6 +641,7 @@ function call_add_zeros(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 4);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add complex zeros
@@ -644,11 +649,13 @@ function call_add_czeros(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 5);
+  axes(h2.axrl);
 endfunction
 
 function call_delete(hsrc, evt) 
   global h1 h2
   set(h1.radio_delete , 'Value', 1);
+  axes(h2.axrl);
 endfunction
 
 function call_save_controlller( )
