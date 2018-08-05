@@ -668,11 +668,11 @@ function call_save_controlller( )
     [n, ~] = size(h1.list_num);
     h1.list_num{n+1,:} = num; 
     h1.list_den{n+1,:} = den;
-    h1.list_c(n+1) = uimenu (h1.uimenu_designs, 'label',  strcat("Desing ",num2str(n+1)),'callback','call_flagdesign');
+    h1.list_c(n+1) = uimenu (h1.uimenu_designs, 'label',  strcat("Design ",num2str(n+1)),'callback','call_flagdesign');
   else
     h1.list_num = {num}; 
     h1.list_den = {den};
-    h1.list_c(1) = uimenu (h1.uimenu_designs, 'label', "Desing1",'callback','call_flagdesign');
+    h1.list_c(1) = uimenu (h1.uimenu_designs, 'label', "Design 1",'callback','call_flagdesign');
     h1.flag_disp_C =   1;
   endif
     
