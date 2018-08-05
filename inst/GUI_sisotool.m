@@ -97,7 +97,7 @@ uimenu(controller_menu2, 'label', 'Edit Controller ...', 'callback', 'call_menue
 c = uicontextmenu (fig2);
 
 % create menus in the context menu
-h2.m1 = uimenu ("parent",c,"label","Edit Compensantor ... ","callback",'call_menuedit');
+h2.m1 = uimenu ("parent",c,"label","Edit Compensator ... ","callback",'call_menuedit');
 
 % set the context menu for the figure
 set (fig2, "uicontextmenu", c);
@@ -626,7 +626,7 @@ h1.lbl_diagrams = uicontrol ("style", "text",
 
 h1.lbl_plant = uicontrol ("style", "text",
                                "units", "normalized",
-                               "string", "Transfer function : ... wainting for input ...",
+                               "string", "Transfer function : ... waiting for input ...",
                                "horizontalalignment", "left",
                                "position", [0.05 0.1 0.35 0.06]); 
             
