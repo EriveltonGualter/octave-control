@@ -199,6 +199,7 @@ function update_plot (init)
           plots();
         catch
           set(h1.lbl_plant, 'String', 'Transfer function : ... invalid! Try again  ...');
+          errordlg ('Invalid Transfer Function.');
         end_try_catch
 
     endswitch
@@ -510,14 +511,14 @@ function plotrlocus()
   % create empty toolbar
   if isfield(h2, 'brp') == 0
     t = uitoolbar (2);
-    iconrp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RPole.png'));
-    iconrz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RZero.png'));
-    iconcp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CPole.png'));
-    iconcz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CZero.png'));
-    iconer=im2double(imread('/home/erivelton/octave/control-3.1.0/images/Clear_16x16.png'));
+    iconrp=im2double(imread('~/octave/control-3.1.0/images/RPole.png'));
+    iconrz=im2double(imread('~/octave/control-3.1.0/images/RZero.png'));
+    iconcp=im2double(imread('~/octave/control-3.1.0/images/CPole.png'));
+    iconcz=im2double(imread('~/octave/control-3.1.0/images/CZero.png'));
+    iconer=im2double(imread('~/octave/control-3.1.0/images/Clear_16x16.png'));
 
-    % add pushtool button to toolbar
-    h2.brp = uipushtool (t, "cdata", iconrp,'ClickedCallback', 'call_add_poles');
+      % add pushtool button to toolbar
+      h2.brp = uipushtool (t, "cdata", iconrp,'ClickedCallback', 'call_add_poles');
     h2.brz = uipushtool (t, "cdata", iconrz,'ClickedCallback', 'call_add_zeros');
     h2.bcp = uipushtool (t, "cdata", iconcp,'ClickedCallback', 'call_add_cpoles');
     h2.bcr = uipushtool (t, "cdata", iconcz,'ClickedCallback', 'call_add_czeros');
