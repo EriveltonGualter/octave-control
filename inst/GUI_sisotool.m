@@ -16,9 +16,10 @@ global h1 h2
 
 % Initizailiation of the variables
 h1.H = 1;   # Sensor
+h1.H = 1;   # Sensor
 h1.C = zpk([],[],1);  # Compensator
 h1.F = zpk([],[],1); 
-h1.C = zpk([-2 -20],[0],1000);  # Compensator
+h1.C = zpk([-2 -20],[ ],1000);  # Compensator test
 
 % Initial Plant (Only for test)
 ##h1.G = tf([2 5 1],[1 2 3]);
@@ -43,6 +44,10 @@ fig3 = figure;
 set (fig3, 'Name','Edit Controller','NumberTitle','off');
 set(3, 'Visible', 'off');
 
+fig4 = figure('Resize','off');
+set(fig4, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
+set (fig4, 'Name','Edit  Architecture','NumberTitle','off');
+set(4, 'Visible', 'off');
 
 ## MENUS
 
@@ -68,6 +73,10 @@ uimenu (add_menu1, 'label', "Notch",                     'callback', 'call_pendi
 controller_menu1 = uimenu(fig1, 'label', '&Controller');
 uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
 uimenu(controller_menu1, 'label', 'Edit Controller ...', 'callback', 'call_menuedit');
+h1.uimenu_designs = uimenu(controller_menu1, 'label', 'Designs ...');
+
+architecture_menu1 = uimenu(fig1, 'label', 'Architecture');
+uimenu(architecture_menu1, 'label', 'Edit Architecture ...', 'callback', 'call_menuarchitecture');
 
 
 # Fig2
@@ -126,23 +135,29 @@ function update_plot (init)
     switch (diag)
       case {[ 1 0 0]}
         h2.axrl    = subplot(2,2,[1 2 3 4]); 
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
       case {[ 0 1 0]}
         h2.axbm = subplot(2,2,[1 2]);
         h2.axbp  = subplot(2,2,[3 4]); 
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
       case {[ 0 0 1]}
         h2.axny   = subplot(2,2,[1 2 3 4]);
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
    
       case {[ 0 1 1]}
         h2.axny  = subplot(2,2,[1 3]); 
         h2.axbm = subplot(2,2,2);
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'off'); set(h2.brz, 'Visible', 'off'); set(h2.bcp, 'Visible', 'off'); set(h2.bcr, 'Visible', 'off');
       case {[ 1 0 1]}
         h2.axrl    = subplot(2,1,1); 
         h2.axny  = subplot(2,1,2); 
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
       case {[ 1 1 0]}
         h2.axrl    = subplot(2,2,[1 3]);
         h2.axbm = subplot(2,2,2); 
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
         
       case {[ 1 1 1]}
         h2.axrl    = subplot(2,2,1);
@@ -150,6 +165,7 @@ function update_plot (init)
         h2.axny  = subplot(2,2,3);
         h2.axbm = subplot(2,2,2);
         h2.axbp  = subplot(2,2,4);
+        set(h2.brp, 'Visible', 'on'); set(h2.brz, 'Visible', 'on'); set(h2.bcp, 'Visible', 'on'); set(h2.bcr, 'Visible', 'on');
     endswitch
         
     ## Plot diagrams if any of the radio buttons is pressed 
@@ -168,9 +184,9 @@ function update_plot (init)
         set (h1.radio_add, "value", 0);
         set (h1.radio_dragging, "value", 0);
       case {h1.btn_savecontroller}
-        C = h1.C;
-        save controller.mat C;
+        call_save_controlller
       case {h1.enter_plant}
+        disp('DEB');
         s = tf('s');
         v = get (gcbo, "string");
         
@@ -310,6 +326,7 @@ function release_click (hsrc, evt)
     endif
         
     h1.C = zpk (olzer, olpol',k);
+    set(h1.radio_delete, "value", 0);
    endif
    
   if ( get(h1.radio_dragging, "value") ) ## DRAGGING
@@ -410,9 +427,59 @@ function plots()
   endif
   
   set(0, 'currentfigure', 1); 
-  axes(h1.ax1);
-  step(feedback(h1.C*h1.G));  
-  axes(h2.axrl);
+  axes(h1.ax1); cla;
+  
+  if isfield(h1, 'flag_disp_C') == 0 
+    h1.flag_disp_C(1) = 1;
+    ii = 1;
+  else
+    ii = find(h1.flag_disp_C == 1) ;
+  endif
+  
+  flag = 1;
+  flag_legend = 0;
+  for i=ii'
+      if isfield(h1,'list_num')
+        C = tf(h1.list_num{i,:}, h1.list_den{i,:});
+      else
+        C = h1.C;
+      end
+      u = C/(1+C*h1.G*h1.H);
+      switch ( get (h1.select_mainaxes, "Value") )   
+          case {1}
+            hold on;
+            step(feedback(C*h1.G));
+            flag_legend = 1;
+          case {2}
+            [olpol, olzer, ~,~] = getZP (u);
+            if length(olzer) < length(olpol)
+              hold on; 
+              impulse(feedback(h1.G*h1.C,h1.H));
+              flag_legend = 1;
+            endif
+            title('Impulse Response');
+          case {3}
+            [olpol, olzer, ~,~] = getZP (u);
+            if length(olzer) <= length(olpol)
+              hold on; 
+              step(u);
+              flag_legend = 1;
+            endif
+            title('Control Effort');
+      endswitch
+      
+      name = strcat('Design', num2str(i));
+      if flag
+        str = {name};
+        flag = 0;
+      else
+        str = {str{:,:}, name};
+      endif    
+  endfor
+  hold off;
+  if flag_legend
+    legend(str(:));
+  endif
 endfunction
 
 function plotrlocus()
@@ -438,6 +505,25 @@ function plotrlocus()
   hold on; plot(X,Y,"*", "color", "m", "markersize", 8, "linewidth", 6);
   hold off;
   xlim auto
+
+  %%%%%%%%%%%%%%%%%%%  icons %%%%%%%%%%%%%%%%%%%
+  % create empty toolbar
+  if isfield(h2, 'brp') == 0
+    t = uitoolbar (2);
+    iconrp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RPole.png'));
+    iconrz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/RZero.png'));
+    iconcp=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CPole.png'));
+    iconcz=im2double(imread('/home/erivelton/octave/control-3.1.0/images/CZero.png'));
+    iconer=im2double(imread('/home/erivelton/octave/control-3.1.0/images/Clear_16x16.png'));
+
+    % add pushtool button to toolbar
+    h2.brp = uipushtool (t, "cdata", iconrp,'ClickedCallback', 'call_add_poles');
+    h2.brz = uipushtool (t, "cdata", iconrz,'ClickedCallback', 'call_add_zeros');
+    h2.bcp = uipushtool (t, "cdata", iconcp,'ClickedCallback', 'call_add_cpoles');
+    h2.bcr = uipushtool (t, "cdata", iconcz,'ClickedCallback', 'call_add_czeros');
+    h2.ber = uipushtool (t, "cdata", iconer,'ClickedCallback', 'call_delete');
+  endif
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
    
   axes(h1.ax1);
   step(feedback(h1.C*h1.G)); 
@@ -549,6 +635,7 @@ function call_add_poles(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 2);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add complex poles
@@ -556,6 +643,7 @@ function call_add_cpoles(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 3);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add zeros
@@ -563,6 +651,7 @@ function call_add_zeros(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 4);
+  axes(h2.axrl);
 endfunction
 
 ## Menu tab to add complex zeros
@@ -570,12 +659,54 @@ function call_add_czeros(hsrc, evt)
   global h1 h2
   set(h1.radio_add, 'Value', 1);
   set (h1.editor_list, "Value", 5);
+  axes(h2.axrl);
 endfunction
 
-function call_save_controlller(hsrc, evt)
+function call_delete(hsrc, evt) 
   global h1 h2
+  set(h1.radio_delete , 'Value', 1);
+  axes(h2.axrl);
+endfunction
+
+function call_save_controlller( )
+##  disp('DEG: save controller')
+  global h1 h2
+  
+  [num, den] = tfdata (h1.C, "vector");
+    
+  if isfield(h1, 'list_num')
+    [n, ~] = size(h1.list_num);
+    h1.list_num{n+1,:} = num; 
+    h1.list_den{n+1,:} = den;
+    h1.list_c(n+1) = uimenu (h1.uimenu_designs, 'label',  strcat("Desing ",num2str(n+1)),'callback','call_flagdesign');
+  else
+    h1.list_num = {num}; 
+    h1.list_den = {den};
+    h1.list_c(1) = uimenu (h1.uimenu_designs, 'label', "Desing1",'callback','call_flagdesign');
+    h1.flag_disp_C =   1;
+  endif
+    
   C = h1.C;
   save controller.mat C;
+endfunction
+
+function call_flagdesign
+  global h1;
+  a = gcbo;
+  [n, ~] = size(h1.list_num);
+  
+  h1.flag_disp_C =   h1.flag_disp_C + zeros(n,1);
+  
+  for i=1:n
+    if (a == h1.list_c(i))
+      if (h1.flag_disp_C(i) ~= 0)
+        h1.flag_disp_C(i) = 0;
+      else
+        h1.flag_disp_C(i) = 1;
+      endif
+    endif
+  endfor
+  plots();
 endfunction
 
 function call_menuedit(hsrc, evt)
@@ -586,21 +717,17 @@ function call_menuedit(hsrc, evt)
   dynamics();
 endfunction
 
+function call_menuarchitecture(hsrc, evt)
+  set(4, 'Visible', 'on');  
+endfunction
+
+
 function visibleoff_diagrams();
   global h1 
   set(h1.radio_locus, 'Value',0);
   set(h1.radio_bode, 'Value',0);
   set(h1.radio_nyquist, 'Value',0);
   set(2, 'Visible', 'off');
-endfunction
-
-function call_select_mainaxes()
-  global h1
-    
-  switch ( get (h1.select_mainaxes, "Value") )   
-      case {1}
-      case {2}
-  endswitch
 endfunction
 
 function call_pendig(hsrc, evt)
@@ -714,8 +841,9 @@ h1.slider_gain = uicontrol ("style", "slider",
 h1.select_mainaxes = uicontrol ("style", "popupmenu",
                                 "units", "normalized",
                                 "string", {"Step Response",
+                                           "Impulse Response",
                                            "Control Effort"}, 
-                                 "callback", @call_select_mainaxes,
+                                 "callback", @plots,
                                 "position", [0.05 0.93 .3 .05]);
                                 
 ## Calbacks
@@ -731,3 +859,4 @@ guidata (fig2, h2)
 update_plot (true);
 
 editcontroller
+editarchitecture

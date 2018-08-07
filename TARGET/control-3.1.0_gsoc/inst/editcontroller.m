@@ -142,10 +142,10 @@ function plot_edit_dynamics()
        h3.lbl_crpart = uicontrol ("parent", p3,  "style", "text", "units", "normalized", "string", "Real Part", "horizontalalignment", "left", "position", [0.1 0.35 .3 .1]);        
        h3.lbl_cipart = uicontrol ("parent", p3,  "style", "text", "units", "normalized", "string", "Imaginary Part", "horizontalalignment", "left", "position", [0.1 0.2 .3 .1]);        
 
-       h3.enter_cfreq = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cfreq, "callback", @call_update_dynamic, "position",  [0.75 0.5 .15 0.05]);        
-       h3.enter_cdamp = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cdamp, "callback", @call_update_dynamic, "position",  [0.75 0.4 .15 0.05]);        
-       h3.enter_crpart = uicontrol ("style", "edit", "units", "normalized", "string", zpk_crpart, "callback", @call_update_dynamic, "position",  [0.75 0.3 .15 0.05]);        
-       h3.enter_cipart = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cipart, "callback", @call_update_dynamic, "position",  [0.75 0.2 .15 0.05]);    
+       h3.enter_cfreq = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cfreq, "callback", @call_update_dynamic, "position",  [0.75 0.5 .15 0.05], 'backgroundcolor', 'white');
+       h3.enter_cdamp = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cdamp, "callback", @call_update_dynamic, "position",  [0.75 0.4 .15 0.05], 'backgroundcolor', 'white');
+       h3.enter_crpart = uicontrol ("style", "edit", "units", "normalized", "string", zpk_crpart, "callback", @call_update_dynamic, "position",  [0.75 0.3 .15 0.05], 'backgroundcolor', 'white');
+       h3.enter_cipart = uicontrol ("style", "edit", "units", "normalized", "string", zpk_cipart, "callback", @call_update_dynamic, "position",  [0.75 0.2 .15 0.05], 'backgroundcolor', 'white');
      else
        h3.lbl_rlocation = uicontrol ("parent", p3,  "style", "text", "units", "normalized", "string", "Location", "horizontalalignment", "left", "position", [0.1 0.45 .3 .2]);        
        h3.enter_rlocation = uicontrol ("style", "edit", "units", "normalized", "string", get(h3.location(i), "String"), "callback", @call_update_dynamic, "position",  [0.7 0.4 .2 0.05]);     
@@ -452,11 +452,7 @@ h3.lbl_equal = uicontrol ("parent", p,
 h3.lbl_num = uicontrol ( "style", "text", "units", "normalized", "string", T(55:end-24), "horizontalalignment", "left", "verticalalignment", "middle","position", [.62 .8 .3 .18]);
  
 ## Edit Box
-h3.gain_box = uicontrol ("style", "edit",
-                               "units", "normalized",
-                               "string", "",
-                               "callback", @call_update_gain,
-                                "position",  [.4 .86 .2 .05]);
+h3.gain_box = uicontrol ("style", "edit",  "units", "normalized", "string", "", "callback", @call_update_gain, "position",  [.4 .86 .2 .05], 'backgroundcolor', 'white');
  
 c3 = uicontextmenu (fig3);
 

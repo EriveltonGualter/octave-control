@@ -44,6 +44,11 @@ fig3 = figure;
 set (fig3, 'Name','Edit Controller','NumberTitle','off');
 set(3, 'Visible', 'off');
 
+fig4 = figure('Resize','off');
+set(fig4, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
+set (fig4, 'Name','Edit  Architecture','NumberTitle','off');
+set(4, 'Visible', 'off');
+
 ## MENUS
 
 # Fig1 
@@ -69,6 +74,10 @@ controller_menu1 = uimenu(fig1, 'label', '&Controller');
 uimenu(controller_menu1, 'label', 'Save', 'callback', 'call_save_controlller');
 uimenu(controller_menu1, 'label', 'Edit Controller ...', 'callback', 'call_menuedit');
 h1.uimenu_designs = uimenu(controller_menu1, 'label', 'Designs ...');
+
+architecture_menu1 = uimenu(fig1, 'label', 'Architecture');
+uimenu(architecture_menu1, 'label', 'Edit Architecture ...', 'callback', 'call_menuarchitecture');
+
 
 # Fig2
 set(0, 'currentfigure', fig2); 
@@ -177,6 +186,7 @@ function update_plot (init)
       case {h1.btn_savecontroller}
         call_save_controlller
       case {h1.enter_plant}
+        disp('DEB');
         s = tf('s');
         v = get (gcbo, "string");
         
@@ -707,6 +717,11 @@ function call_menuedit(hsrc, evt)
   dynamics();
 endfunction
 
+function call_menuarchitecture(hsrc, evt)
+  set(4, 'Visible', 'on');  
+endfunction
+
+
 function visibleoff_diagrams();
   global h1 
   set(h1.radio_locus, 'Value',0);
@@ -844,3 +859,4 @@ guidata (fig2, h2)
 update_plot (true);
 
 editcontroller
+editarchitecture
