@@ -5,32 +5,27 @@
 
 graphics_toolkit qt
 
-## Delete it later (Only for debug) -------------------------------------------------------------------------------
-close all 
-clear all
-clc
-## -------------------------------------------------------------------------------------------------------------------------------
-
 ## For now, I am using global variables. It will be modified
-global h1 h2
+global h1 h2 h4
 
 % Initizailiation of the variables
-h1.H = 1;   # Sensor
-h1.H = 1;   # Sensor
-h1.C = zpk([],[],1);  # Compensator
-h1.F = zpk([],[],1); 
-h1.C = zpk([-2 -20],[ ],1000);  # Compensator test
-
-% Initial Plant (Only for test)
-##h1.G = tf([2 5 1],[1 2 3]);
-h1.G = zpk([],[-10 -2] , 0.01);
-##s = tf('s');
-##h1.G = 1/(s^2 + 10*s + 20);
+if isfield(h1, 'G') == 0 
+  h1.G = zpk([],[],1); 
+endif
+if isfield(h1, 'C') == 0 
+  h1.C = zpk([],[],1); 
+endif
+if isfield(h1, 'H') == 0 
+  h1.H = zpk([],[],1); 
+endif
+if isfield(h1, 'F') == 0 
+  h1.F = zpk([],[],1); 
+endif
 
 % Creating Figures (Main GUI and Diagrams) 
 fig1 = figure;
 h1.ax1 = axes ("position", [0.05 0.5 0.9 0.4]);
-set (fig1, 'Name','sisotool- Control System Designer v0','NumberTitle','off');
+set (fig1, 'Name','sisotool- Control System Designer','NumberTitle','off');
 
 fig2 = figure;
 h2.axrl    = subplot(2,2,[1 3]); % Root Locus Axes
@@ -92,8 +87,8 @@ uimenu (add_menu2, 'label', "'x' Real Pole",           'callback', 'call_add_pol
 uimenu (add_menu2, 'label',  "'xx' Complex Pole", 'callback', 'call_add_cpoles');
 uimenu (add_menu2, 'label',  "'o' Real Zero",          'callback', 'call_add_zeros');
 uimenu (add_menu2, 'label',  "'oo' Complex Zero", 'callback', 'call_add_czeros');
-uimenu (add_menu2, 'label', "Integrator",               'callback', 'call_pendig');
-uimenu (add_menu2, 'label', "Differentiator",          'callback', 'call_pendig');
+uimenu (add_menu2, 'label', "Integrator",               'callback', 'add_integrator');
+uimenu (add_menu2, 'label', "Differentiator",          'callback', 'add_differentiator');
 uimenu (add_menu2, 'label',  "Lead",                      'callback', 'call_pendig');
 uimenu (add_menu2, 'label', "Lag",                         'callback', 'call_pendig');
 uimenu (add_menu2, 'label', "Notch",                     'callback', 'call_pendig');
@@ -107,6 +102,19 @@ c = uicontextmenu (fig2);
 
 % create menus in the context menu
 h2.m1 = uimenu ("parent",c,"label","Edit Compensantor ... ","callback",'call_menuedit');
+h2.m2 = uimenu ("parent",c, 'label', "Add Pole/Zero ...");
+##h2.m3 = uimenu ("parent",c, 'label', "Delete Pole/Zero ...", 'callback','delete_pz');
+
+h2.m4 = uimenu (h2.m2, 'label', "'x' Real Pole" ,           'callback', 'call_add_poles');
+h2.m5 = uimenu (h2.m2, 'label',  "'xx' Complex Pole",   'callback', 'call_add_cpoles');
+h2.m6 = uimenu (h2.m2, 'label',  "'o' Real Zero",           'callback', 'call_add_zeros');
+h2.m7 = uimenu (h2.m2, 'label',  "'oo' Complex Zero",  'callback', 'call_add_czeros');
+h2.m8 = uimenu (h2.m2, 'label', "Integrator",                'callback', 'add_integrator');
+h2.m9 = uimenu (h2.m2, 'label', "Differentiator",           'callback', 'add_differentiator');
+h2.m10 = uimenu (h2.m2, 'label',  "Lead",                     'callback', 'add_pending');
+h2.m11 = uimenu (h2.m2, 'label', "Lag",                        'callback', 'add_pending');
+h2.m12 = uimenu (h2.m2, 'label', "Notch",                    'callback', 'add_pending');
+
 
 % set the context menu for the figure
 set (fig2, "uicontextmenu", c);
@@ -118,10 +126,30 @@ function update_plot (init)
     global h1 h2
 
     if (init == 1)
-      set (h1.radio_bode, "value", 0);
-      set (h1.radio_locus, "value", 0);
-      axes(h1.ax1);
+      if (isfield(h1, 'diag'))
+        for i=1:length(h1.diag)
+          str = h1.diag{i};
+          str1 = 'locus';
+          str2 = 'bode';
+          str3 = 'nyquist';
+          
+          if (strcmp(str, str1))  
+            set(h1.radio_locus, 'Value',1);
+          endif
+          if (strcmp(str, str2))  
+            set(h1.radio_bode, 'Value',1);
+          endif
+          if (strcmp(str, str3))  
+            set(h1.radio_nyquist, 'Value',1);
+          endif
+        endfor
+      else
+        set(h1.radio_locus, 'Value',0);
+        set(h1.radio_bode, 'Value',0);
+        set(h1.radio_nyquist, 'Value',0);
+      endif
       
+      axes(h1.ax1);
       plots()
     endif
     ## Create subplots accoring to the radio buttons (Root Locus, Bode, and Nyquist)
@@ -172,8 +200,9 @@ function update_plot (init)
     if (get(h1.radio_locus, 'Value') || get(h1.radio_bode, 'Value') || get(h1.radio_nyquist, 'Value'))
       plots()
     endif
-        
-    switch (gcbo)
+
+    a = gcbo;
+    switch (a)
       case {h1.radio_dragging}
         set (h1.radio_add, "value", 0);
         set(h1.radio_delete, "value", 0);
@@ -184,7 +213,7 @@ function update_plot (init)
         set (h1.radio_add, "value", 0);
         set (h1.radio_dragging, "value", 0);
       case {h1.btn_savecontroller}
-        call_save_controlller
+        call_save_controlller()
       case {h1.enter_plant}
         disp('DEB');
         s = tf('s');
@@ -403,6 +432,33 @@ function slider_adjustgain(hsrc, evt)
   plots();
 endfunction
 
+function add_integrator()
+  global h1 h3
+  
+  [olpol, olzer,k,~] = getZP (h1.C);
+  
+  c = 0  
+  olpol = [olpol; c(1)];
+  h1.C = zpk (olzer, olpol',k);    
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
+function add_differentiator()
+  global h1 h3
+  [olpol, olzer,k,~] = getZP (h1.C);
+  c = 0;
+  
+  olzer = [olzer; c(1)];
+  h1.C = zpk (olzer, olpol',k);
+  h3.sys = h1.C;
+  
+  dynamics();
+  plots();
+endfunction
+
 function plots()
   global h1 h2 h3
   set(0, 'currentfigure', 2); 
@@ -449,7 +505,7 @@ function plots()
       switch ( get (h1.select_mainaxes, "Value") )   
           case {1}
             hold on;
-            step(feedback(C*h1.G));
+            step(feedback(C*h1.G), 5);
             flag_legend = 1;
           case {2}
             [olpol, olzer, ~,~] = getZP (u);
@@ -672,7 +728,6 @@ endfunction
 function call_save_controlller( )
 ##  disp('DEG: save controller')
   global h1 h2
-  
   [num, den] = tfdata (h1.C, "vector");
     
   if isfield(h1, 'list_num')
@@ -723,12 +778,17 @@ function call_menuarchitecture(hsrc, evt)
 endfunction
 
 
-function visibleoff_diagrams();
+function visibleoff_diagrams()
   global h1 
   set(h1.radio_locus, 'Value',0);
   set(h1.radio_bode, 'Value',0);
   set(h1.radio_nyquist, 'Value',0);
   set(2, 'Visible', 'off');
+endfunction
+
+function close_all()
+  close all force;
+  clear all global;
 endfunction
 
 function call_pendig(hsrc, evt)
@@ -852,7 +912,7 @@ set (fig2, "windowbuttondownfcn", @down_fig);
 set (fig2, "windowbuttonupfcn", @release_click)
 set(fig2, 'Visible', 'off');
 set(fig2,'CloseRequestFcn','visibleoff_diagrams');
-set(fig1,'CloseRequestFcn','close all force');
+set(fig1,'CloseRequestFcn','close_all');
 
 set (fig1, "color", get(0, "defaultuicontrolbackgroundcolor"))
 guidata (fig1, h1)

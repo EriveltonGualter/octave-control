@@ -77,7 +77,7 @@ function call_cancell
 endfunction
 
 function call_help
-  f = msgbox('Pending Documentaion ...','Help');
+  f = helpdlg('Acess the following website for more information: https://eriveltongualter.github.io/GSoC2018/pages/documentation.html' ,'Help');
 endfunction
 
 set(fig4, 'resize', 'off');
@@ -155,9 +155,9 @@ h4.gp3_identifier5_edit2 = uicontrol (gp3,"style", "edit", "units", "normalized"
 h4.gp3_identifier6_edit2 = uicontrol (gp3,"style", "edit", "units", "normalized", "string", "--", "horizontalalignment", "center", "position", [0.42 0.15 0.2 .1], 'backgroundcolor', 'white');
 h4.gp3_identifier7_edit2 = uicontrol (gp3,"style", "edit", "units", "normalized", "string", "--", "horizontalalignment", "center", "position", [0.42 0.0 0.2 .1], 'backgroundcolor', 'white');
 
-h1.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "OK", "position", [0.66 0.01 0.1 0.06],'callback','call_ok');  
-h1.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "Cancel", "position", [0.78 0.01 0.1 0.06],'callback', 'call_cancell');   
-h1.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "Help", "position", [0.9 0.01 0.1 0.06],'callback', 'call_help');  
+h4.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "OK", "position", [0.66 0.01 0.1 0.06],'callback','call_ok');  
+h4.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "Cancel", "position", [0.78 0.01 0.1 0.06],'callback', 'call_cancell');   
+h4.btn_savecontroller = uicontrol ("style", "pushbutton", "units", "normalized", "string", "Help", "position", [0.9 0.01 0.1 0.06],'callback', 'call_help');  
                                 
 set (fig4, "color", get(0, "defaultuicontrolbackgroundcolor"));
 set(fig4,'CloseRequestFcn','visibleoff_architecture');
