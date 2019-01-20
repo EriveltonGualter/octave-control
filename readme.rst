@@ -3,7 +3,7 @@ Interactive Tool for Single Input Single Output (SISO) Linear Control System Des
 
 The Interactive Tool for Single Input Single Output (SISO) Linear Control System Design let you design SISO controllers for feedback system modeled in GNU Octave.
 
-Currently, it presents the following functionalities:
+Currently, it presents the following functionalities::
 
  - Interactive plots: Bode, Root Locus and Nyquist diagrams;
  - Root Locus graphical editos for adding, modifyng, and removing controller poles, zeros and gains.
