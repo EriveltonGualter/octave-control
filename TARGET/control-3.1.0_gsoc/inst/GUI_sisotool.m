@@ -1,6 +1,6 @@
 ## 16.06.2016 Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
 ## sisotool
-
+## GSoC 2018: https://eriveltongualter.github.io/GSoC2018/
 ## Author: Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
 
 graphics_toolkit qt

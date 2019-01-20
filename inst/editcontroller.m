@@ -1,13 +1,10 @@
+## 16.06.2016 Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
+## editcontroller
+## GSoC 2018: https://eriveltongualter.github.io/GSoC2018/
+## Author: Erivelton Gualter dos Santos <erivelton.gualter@gmail.com>
+
 
 graphics_toolkit qt
-
-## Delete it later (Only for debug) -------------------------------------------------------------------------------
-##close all 
-##clear all
-## -------------------------------------------------------------------------------------------------------------------------------
-
-## For now, I am using global variables. It will be modified
-
 
 global h3
 

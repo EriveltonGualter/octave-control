@@ -71,6 +71,7 @@
 ## @end deftypefn
 
 ## Author: Erivelton Gualter <erivelton.gualter@gmail.com>
+## GSoC 2018: https://eriveltongualter.github.io/GSoC2018/
 ## Created: 2018
 
 function sisotool (varargin)
