@@ -14,6 +14,9 @@ Currently, it presents the following functionalities:
  - Tune compensators for different loop control structures.
 
 .. image:: sisotool_overview.png
+    :align: center
+    :alt: alternate text
+    
 
 Installation
 ========================
