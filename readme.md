@@ -13,7 +13,7 @@ Currently, it presents the following functionalities:
  - Compare response plots for multiple control system designs.
  - Tune compensators for different loop control structures.
 
-.. image:: https://raw.githubusercontent.com/EriveltonGualter/GSoC2018/master/images/sisotool_overview.png
+.. image:: sisotool_overview.png
 
 Installation
 ========================
